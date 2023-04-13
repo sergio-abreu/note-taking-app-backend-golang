@@ -32,3 +32,13 @@ type Note struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
+
+func (n *Note) edit(title, description string) error {
+	if len(title) == 0 {
+		return ErrEmptyTitle
+	}
+	n.Title = title
+	n.Description = description
+	n.UpdatedAt = time.Now()
+	return nil
+}

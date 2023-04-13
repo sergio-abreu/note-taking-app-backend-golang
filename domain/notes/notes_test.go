@@ -44,6 +44,61 @@ func TestNote_CreateNote(t *testing.T) {
 	})
 }
 
+func TestNote_EditNote(t *testing.T) {
+	g := NewWithT(t)
+
+	t.Run("Edit note successfully", func(t *testing.T) {
+		user := FakeUser(t)
+		note, err := user.CreateNote("test title", "test description")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		newTitle := "new title test"
+		newDescription := "new description test"
+
+		err = user.EditNote(&note, newTitle, newDescription)
+
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		g.Expect(note).Should(MatchAllFields(Fields{
+			"ID":          Not(Equal(uuid.Nil)),
+			"Title":       Equal(newTitle),
+			"Description": Equal(newDescription),
+			"UserID":      Equal(user.ID),
+			"CreatedAt":   BeTemporally("~", time.Now(), time.Second),
+			"UpdatedAt":   BeTemporally("~", time.Now(), time.Second),
+		}))
+	})
+
+	t.Run("Don't edit note when title is empty", func(t *testing.T) {
+		user := FakeUser(t)
+		note, err := user.CreateNote("test title", "test description")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		newTitle := ""
+		newDescription := "new description test"
+
+		err = user.EditNote(&note, newTitle, newDescription)
+
+		g.Expect(err).Should(
+			MatchError(ErrEmptyTitle))
+	})
+
+	t.Run("Don't edit note when note doesn't belong to this user", func(t *testing.T) {
+		user1 := FakeUser(t)
+		user2 := FakeUser(t)
+		noteFromUser2, err := user2.CreateNote("test title", "test description")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		newTitle := "new title test"
+		newDescription := "new description test"
+
+		err = user1.EditNote(&noteFromUser2, newTitle, newDescription)
+
+		g.Expect(err).Should(
+			MatchError(ErrNoteDoesntBelongToThisUser))
+	})
+}
+
 func FakeUser(_ *testing.T) User {
 	fakeUser := gofakeit.Person()
 	return User{
