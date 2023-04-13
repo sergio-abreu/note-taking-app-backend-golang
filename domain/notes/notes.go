@@ -8,7 +8,8 @@ import (
 )
 
 var (
-	ErrEmptyTitle = errors.New("empty title")
+	ErrEmptyTitle            = errors.New("empty title")
+	ErrNotIsAlreadyCompleted = errors.New("note is already completed")
 )
 
 func newNote(title, description string, userID uuid.UUID) (Note, error) {
@@ -28,6 +29,7 @@ type Note struct {
 	ID          uuid.UUID
 	Title       string
 	Description string
+	Completed   bool
 	UserID      uuid.UUID
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
@@ -39,6 +41,15 @@ func (n *Note) edit(title, description string) error {
 	}
 	n.Title = title
 	n.Description = description
+	n.UpdatedAt = time.Now()
+	return nil
+}
+
+func (n *Note) markAsCompleted() error {
+	if n.Completed {
+		return ErrNotIsAlreadyCompleted
+	}
+	n.Completed = true
 	n.UpdatedAt = time.Now()
 	return nil
 }

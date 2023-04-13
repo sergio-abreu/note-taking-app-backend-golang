@@ -21,8 +21,22 @@ func (u User) CreateNote(title, description string) (Note, error) {
 }
 
 func (u User) EditNote(note *Note, title, description string) error {
+	if err := u.validateNoteBelongsToUser(note); err != nil {
+		return err
+	}
+	return note.edit(title, description)
+}
+
+func (u User) MarkNoteAsCompleted(note *Note) error {
+	if err := u.validateNoteBelongsToUser(note); err != nil {
+		return err
+	}
+	return note.markAsCompleted()
+}
+
+func (u User) validateNoteBelongsToUser(note *Note) error {
 	if u.ID != note.UserID {
 		return ErrNoteDoesntBelongToThisUser
 	}
-	return note.edit(title, description)
+	return nil
 }
