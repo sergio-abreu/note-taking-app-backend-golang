@@ -187,7 +187,7 @@ func TestNote_MarkNoteAsInProgress(t *testing.T) {
 	})
 }
 
-func TestNote_CopyANote(t *testing.T) {
+func TestNote_CopyNote(t *testing.T) {
 	g := NewWithT(t)
 
 	t.Run("Copy an in progress note successfully", func(t *testing.T) {
@@ -198,7 +198,7 @@ func TestNote_CopyANote(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 
-		note2, err := user.CopyANote(note1)
+		note2, err := user.CopyNote(note1)
 
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
@@ -217,7 +217,7 @@ func TestNote_CopyANote(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 
-		note2, err := user.CopyANote(note1)
+		note2, err := user.CopyNote(note1)
 
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
@@ -232,7 +232,40 @@ func TestNote_CopyANote(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 
-		_, err = user1.CopyANote(noteFromUser2)
+		_, err = user1.CopyNote(noteFromUser2)
+
+		g.Expect(err).Should(
+			MatchError(ErrNoteDoesntBelongToThisUser))
+	})
+}
+
+func TestNote_DeleteNote(t *testing.T) {
+	g := NewWithT(t)
+
+	t.Run("Delete note successfully", func(t *testing.T) {
+		user := FakeUser(t)
+		title := "title test"
+		description := "description test"
+		note, err := user.CreateNote(title, description)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		err = user.DeleteNote(note)
+
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		g.Expect(note).Should(
+			BeANote(title, description, false, user.ID, time.Now(), time.Time{}))
+	})
+
+	t.Run("Don't delete note when it doesn't belong to this user", func(t *testing.T) {
+		user1 := FakeUser(t)
+		user2 := FakeUser(t)
+		noteFromUser2, err := user2.CreateNote("test title", "test description")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		err = user1.DeleteNote(noteFromUser2)
 
 		g.Expect(err).Should(
 			MatchError(ErrNoteDoesntBelongToThisUser))

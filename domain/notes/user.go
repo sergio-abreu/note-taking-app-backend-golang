@@ -41,11 +41,18 @@ func (u User) MarkNoteAsInProgress(note *Note) error {
 	return note.markAsInProgress()
 }
 
-func (u User) CopyANote(note Note) (Note, error) {
+func (u User) CopyNote(note Note) (Note, error) {
 	if err := u.validateNoteBelongsToUser(&note); err != nil {
 		return Note{}, err
 	}
 	return note.copy(), nil
+}
+
+func (u User) DeleteNote(note Note) error {
+	if err := u.validateNoteBelongsToUser(&note); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (u User) validateNoteBelongsToUser(note *Note) error {
