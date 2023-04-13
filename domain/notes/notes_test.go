@@ -72,7 +72,7 @@ func TestNote_EditNote(t *testing.T) {
 			MatchError(ErrEmptyTitle))
 	})
 
-	t.Run("Don't edit note when note doesn't belong to this user", func(t *testing.T) {
+	t.Run("Don't edit note when it doesn't belong to this user", func(t *testing.T) {
 		user1 := FakeUser(t)
 		user2 := FakeUser(t)
 		noteFromUser2, err := user2.CreateNote("test title", "test description")
@@ -122,7 +122,7 @@ func TestNote_MarkNoteAsComplete(t *testing.T) {
 			MatchError(ErrNotIsAlreadyCompleted))
 	})
 
-	t.Run("Don't complete a note when note doesn't belong to this user", func(t *testing.T) {
+	t.Run("Don't complete a note when it doesn't belong to this user", func(t *testing.T) {
 		user1 := FakeUser(t)
 		user2 := FakeUser(t)
 		noteFromUser2, err := user2.CreateNote("test title", "test description")
@@ -170,7 +170,7 @@ func TestNote_MarkNoteAsInProgress(t *testing.T) {
 			MatchError(ErrNotIsAlreadyInProgress))
 	})
 
-	t.Run("Don't mark note as in progress when note doesn't belong to this user", func(t *testing.T) {
+	t.Run("Don't mark note as in progress when it doesn't belong to this user", func(t *testing.T) {
 		user1 := FakeUser(t)
 		user2 := FakeUser(t)
 		noteFromUser2, err := user2.CreateNote("test title", "test description")
@@ -181,6 +181,58 @@ func TestNote_MarkNoteAsInProgress(t *testing.T) {
 			Not(HaveOccurred()))
 
 		err = user1.MarkNoteAsInProgress(&noteFromUser2)
+
+		g.Expect(err).Should(
+			MatchError(ErrNoteDoesntBelongToThisUser))
+	})
+}
+
+func TestNote_CopyANote(t *testing.T) {
+	g := NewWithT(t)
+
+	t.Run("Copy an in progress note successfully", func(t *testing.T) {
+		user := FakeUser(t)
+		title := "title test"
+		description := "description test"
+		note1, err := user.CreateNote(title, description)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		note2, err := user.CopyANote(note1)
+
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		g.Expect(note2).Should(
+			BeANote(title, description, false, user.ID, time.Now(), time.Time{}))
+	})
+
+	t.Run("Copy a completed note successfully", func(t *testing.T) {
+		user := FakeUser(t)
+		title := "title test"
+		description := "description test"
+		note1, err := user.CreateNote(title, description)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		err = user.MarkNoteAsCompleted(&note1)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		note2, err := user.CopyANote(note1)
+
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		g.Expect(note2).Should(
+			BeANote(title, description, false, user.ID, time.Now(), time.Time{}))
+	})
+
+	t.Run("Don't copy a note when it doesn't belong to this user", func(t *testing.T) {
+		user1 := FakeUser(t)
+		user2 := FakeUser(t)
+		noteFromUser2, err := user2.CreateNote("test title", "test description")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		_, err = user1.CopyANote(noteFromUser2)
 
 		g.Expect(err).Should(
 			MatchError(ErrNoteDoesntBelongToThisUser))

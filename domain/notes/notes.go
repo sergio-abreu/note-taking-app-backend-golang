@@ -63,3 +63,13 @@ func (n *Note) markAsInProgress() error {
 	n.UpdatedAt = time.Now()
 	return nil
 }
+
+func (n *Note) copy() Note {
+	return Note{
+		ID:          uuid.Must(uuid.NewV4()),
+		Title:       n.Title,
+		Description: n.Description,
+		UserID:      n.UserID,
+		CreatedAt:   time.Now(),
+	}
+}

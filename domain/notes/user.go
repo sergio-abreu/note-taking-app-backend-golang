@@ -41,6 +41,13 @@ func (u User) MarkNoteAsInProgress(note *Note) error {
 	return note.markAsInProgress()
 }
 
+func (u User) CopyANote(note Note) (Note, error) {
+	if err := u.validateNoteBelongsToUser(&note); err != nil {
+		return Note{}, err
+	}
+	return note.copy(), nil
+}
+
 func (u User) validateNoteBelongsToUser(note *Note) error {
 	if u.ID != note.UserID {
 		return ErrNoteDoesntBelongToThisUser
