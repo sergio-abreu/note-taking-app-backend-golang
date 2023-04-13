@@ -34,6 +34,13 @@ func (u User) MarkNoteAsCompleted(note *Note) error {
 	return note.markAsCompleted()
 }
 
+func (u User) MarkNoteAsInProgress(note *Note) error {
+	if err := u.validateNoteBelongsToUser(note); err != nil {
+		return err
+	}
+	return note.markAsInProgress()
+}
+
 func (u User) validateNoteBelongsToUser(note *Note) error {
 	if u.ID != note.UserID {
 		return ErrNoteDoesntBelongToThisUser

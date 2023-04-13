@@ -8,8 +8,9 @@ import (
 )
 
 var (
-	ErrEmptyTitle            = errors.New("empty title")
-	ErrNotIsAlreadyCompleted = errors.New("note is already completed")
+	ErrEmptyTitle             = errors.New("empty title")
+	ErrNotIsAlreadyCompleted  = errors.New("note is already completed")
+	ErrNotIsAlreadyInProgress = errors.New("note is already in progress")
 )
 
 func newNote(title, description string, userID uuid.UUID) (Note, error) {
@@ -50,6 +51,15 @@ func (n *Note) markAsCompleted() error {
 		return ErrNotIsAlreadyCompleted
 	}
 	n.Completed = true
+	n.UpdatedAt = time.Now()
+	return nil
+}
+
+func (n *Note) markAsInProgress() error {
+	if !n.Completed {
+		return ErrNotIsAlreadyInProgress
+	}
+	n.Completed = false
 	n.UpdatedAt = time.Now()
 	return nil
 }

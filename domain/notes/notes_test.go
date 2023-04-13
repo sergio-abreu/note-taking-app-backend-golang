@@ -88,7 +88,7 @@ func TestNote_EditNote(t *testing.T) {
 	})
 }
 
-func TestNote_CompleteNote(t *testing.T) {
+func TestNote_MarkNoteAsComplete(t *testing.T) {
 	g := NewWithT(t)
 
 	t.Run("Complete note successfully", func(t *testing.T) {
@@ -130,6 +130,57 @@ func TestNote_CompleteNote(t *testing.T) {
 			Not(HaveOccurred()))
 
 		err = user1.MarkNoteAsCompleted(&noteFromUser2)
+
+		g.Expect(err).Should(
+			MatchError(ErrNoteDoesntBelongToThisUser))
+	})
+}
+
+func TestNote_MarkNoteAsInProgress(t *testing.T) {
+	g := NewWithT(t)
+
+	t.Run("Mark note as in progress successfully", func(t *testing.T) {
+		user := FakeUser(t)
+		title := "title test"
+		description := "description test"
+		note, err := user.CreateNote(title, description)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		err = user.MarkNoteAsCompleted(&note)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		err = user.MarkNoteAsInProgress(&note)
+
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		g.Expect(note).Should(
+			BeANote(title, description, false, user.ID, time.Now(), time.Now()))
+	})
+
+	t.Run("Don't mark note as in progress when it's already in progress", func(t *testing.T) {
+		user := FakeUser(t)
+		note, err := user.CreateNote("test title", "test description")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		err = user.MarkNoteAsInProgress(&note)
+
+		g.Expect(err).Should(
+			MatchError(ErrNotIsAlreadyInProgress))
+	})
+
+	t.Run("Don't mark note as in progress when note doesn't belong to this user", func(t *testing.T) {
+		user1 := FakeUser(t)
+		user2 := FakeUser(t)
+		noteFromUser2, err := user2.CreateNote("test title", "test description")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		err = user2.MarkNoteAsCompleted(&noteFromUser2)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		err = user1.MarkNoteAsInProgress(&noteFromUser2)
 
 		g.Expect(err).Should(
 			MatchError(ErrNoteDoesntBelongToThisUser))
