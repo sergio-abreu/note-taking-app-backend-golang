@@ -55,6 +55,13 @@ func (u User) DeleteNote(note Note) error {
 	return nil
 }
 
+func (u User) ScheduleAReminder(note Note, cronExpression, rawEndsAt string, repeats uint) (Reminder, error) {
+	if err := u.validateNoteBelongsToUser(&note); err != nil {
+		return Reminder{}, err
+	}
+	return newReminder(note.ID, u.ID, cronExpression, rawEndsAt, repeats)
+}
+
 func (u User) validateNoteBelongsToUser(note *Note) error {
 	if u.ID != note.UserID {
 		return ErrNoteDoesntBelongToThisUser

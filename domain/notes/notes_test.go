@@ -272,6 +272,143 @@ func TestNote_DeleteNote(t *testing.T) {
 	})
 }
 
+func TestNote_ScheduleAReminder(t *testing.T) {
+	g := NewWithT(t)
+
+	t.Run("Schedule a reminder to repeat forever successfully", func(t *testing.T) {
+		user := FakeUser(t)
+		note, err := user.CreateNote("title test", "description test")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		cronExpression := "0 1 * * *"
+		repeats := uint(0)
+
+		reminder, err := user.ScheduleAReminder(note, cronExpression, "", repeats)
+
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		g.Expect(reminder).Should(
+			BeAReminder(note.ID, user.ID, cronExpression, time.Time{}, repeats))
+	})
+
+	t.Run("Schedule a reminder to repeat 3 times successfully", func(t *testing.T) {
+		user := FakeUser(t)
+		note, err := user.CreateNote("title test", "description test")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		cronExpression := "0 1 * * *"
+		repeats := uint(3)
+
+		reminder, err := user.ScheduleAReminder(note, cronExpression, "", repeats)
+
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		g.Expect(reminder).Should(
+			BeAReminder(note.ID, user.ID, cronExpression, time.Time{}, repeats))
+	})
+
+	t.Run("Schedule a reminder to repeat until certain date successfully", func(t *testing.T) {
+		user := FakeUser(t)
+		note, err := user.CreateNote("title test", "description test")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		cronExpression := "0 1 * * *"
+		repeats := uint(0)
+		endsAt := time.Now().AddDate(0, 1, 0)
+
+		reminder, err := user.ScheduleAReminder(note, cronExpression, endsAt.Format(time.RFC3339), repeats)
+
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		g.Expect(reminder).Should(
+			BeAReminder(note.ID, user.ID, cronExpression, endsAt, repeats))
+	})
+
+	t.Run("Don't create a reminder when endsAt date format is invalid", func(t *testing.T) {
+		user := FakeUser(t)
+		note, err := user.CreateNote("title test", "description test")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		_, err = user.ScheduleAReminder(note, "0 1 * * *", "invalid-format", 0)
+
+		g.Expect(err).Should(
+			MatchError(ErrInvalidEndsAt))
+	})
+
+	t.Run("Don't create a reminder when configured both endsAt and repeats", func(t *testing.T) {
+		user := FakeUser(t)
+		note, err := user.CreateNote("title test", "description test")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		cronExpression := "0 1 * * *"
+		repeats := uint(1)
+		endsAt := time.Now().AddDate(0, 1, 0)
+
+		_, err = user.ScheduleAReminder(note, cronExpression, endsAt.Format(time.RFC3339), repeats)
+
+		g.Expect(err).Should(
+			MatchError(ErrCannotConfigureEndsAtAndRepeats))
+	})
+
+	t.Run("Don't create a reminder when cron expression is invalid", func(t *testing.T) {
+		user := FakeUser(t)
+		note, err := user.CreateNote("title test", "description test")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		cronExpression := "0"
+
+		_, err = user.ScheduleAReminder(note, cronExpression, "", 0)
+
+		g.Expect(err).Should(
+			MatchError(ErrInvalidCronExpression))
+	})
+
+	t.Run("Don't create a reminder when interval is bellow 24 hours", func(t *testing.T) {
+		user := FakeUser(t)
+		note, err := user.CreateNote("title test", "description test")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		cronExpression := "0 * * * *"
+
+		_, err = user.ScheduleAReminder(note, cronExpression, "", 0)
+
+		g.Expect(err).Should(
+			MatchError(ErrExceededMinimumTimeInterval))
+	})
+
+	t.Run("Don't create a reminder when interval is bellow 24 hours", func(t *testing.T) {
+		user1 := FakeUser(t)
+		user2 := FakeUser(t)
+		noteFromUser2, err := user2.CreateNote("test title", "test description")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		cronExpression := "0 * * * *"
+
+		_, err = user1.ScheduleAReminder(noteFromUser2, cronExpression, "", 0)
+
+		g.Expect(err).Should(
+			MatchError(ErrNoteDoesntBelongToThisUser))
+	})
+}
+
+func BeAReminder(
+	noteID uuid.UUID,
+	userID uuid.UUID,
+	cronExpression string,
+	endsAt time.Time,
+	repeats uint,
+) types.GomegaMatcher {
+	return MatchAllFields(Fields{
+		"ID":             Not(Equal(uuid.Nil)),
+		"NoteID":         Equal(noteID),
+		"UserID":         Equal(userID),
+		"CronExpression": Equal(cronExpression),
+		"EndsAt":         BeTemporally("~", endsAt, time.Second),
+		"Repeats":        BeEquivalentTo(repeats),
+	})
+}
+
 func BeANote(
 	title string,
 	description string,
