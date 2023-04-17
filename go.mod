@@ -3,6 +3,7 @@ module github.com/sergio-abreu/note-taking-app-backend-golang
 go 1.20
 
 require (
+	github.com/adhocore/gronx v1.5.0
 	github.com/brianvoe/gofakeit v3.18.0+incompatible
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/onsi/gomega v1.27.6
