@@ -1,0 +1,36 @@
+version: '3.1'
+
+services:
+
+  postgresql:
+    image: ticketech/postgres_cron
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: note-taking-app
+      POSTGRES_USER: note-taking
+      POSTGRES_PASSWORD: note-taking
+    volumes:
+      - ./.docker/postgresql:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8090:8080"
+
+  migration:
+    depends_on:
+      - postgresql
+    image: migrate/migrate:v4.15.2
+    restart: on-failure
+    environment:
+      PG_USER: note-taking
+      PG_PASSWORD: note-taking
+      PG_HOST: postgresql
+      PG_PORT: 5432
+      PG_DB: postgres
+    volumes:
+      - "./infrastructure/migrations:/migrations"
+    command: "-path=/migrations/ -database \"postgres://${PG_USER}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${PG_DB}?sslmode=disable\" up"

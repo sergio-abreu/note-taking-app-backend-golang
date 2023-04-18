@@ -17,4 +17,4 @@ The application is a note taking app similar to Google Keep.
 7. Schedule a reminder to a note.
 8. Reschedule a reminder.
 9. Delete a reminder.
-10. Send an email in the schedule reminder.
+10. Send an email in the scheduled reminder.
