@@ -526,6 +526,41 @@ func TestNote_RescheduleAReminder(t *testing.T) {
 	})
 }
 
+func TestNote_DeleteReminder(t *testing.T) {
+	g := NewWithT(t)
+
+	t.Run("Delete reminder successfully", func(t *testing.T) {
+		user := FakeUser(t)
+		note, err := user.CreateNote("title test", "description test")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		reminder, err := user.ScheduleAReminder(note, "0 5 * * *", "", 0)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		err = user.DeleteReminder(reminder)
+
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+	})
+
+	t.Run("Don't delete note when it doesn't belong to this user", func(t *testing.T) {
+		user1 := FakeUser(t)
+		user2 := FakeUser(t)
+		noteFromUser2, err := user2.CreateNote("test title", "test description")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		reminderFromUser2, err := user2.ScheduleAReminder(noteFromUser2, "0 5 * * *", "", 0)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		err = user1.DeleteReminder(reminderFromUser2)
+
+		g.Expect(err).Should(
+			MatchError(ErrReminderDoesntBelongToThisUser))
+	})
+}
+
 func BeAReminder(
 	noteID uuid.UUID,
 	userID uuid.UUID,

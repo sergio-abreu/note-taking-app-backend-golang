@@ -70,6 +70,13 @@ func (u User) RescheduleAReminder(reminder *Reminder, cronExpression, rawEndsAt 
 	return reminder.reschedule(cronExpression, rawEndsAt, repeats)
 }
 
+func (u User) DeleteReminder(reminder Reminder) error {
+	if err := u.validateReminderBelongsToUser(&reminder); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (u User) validateNoteBelongsToUser(note *Note) error {
 	if u.ID != note.UserID {
 		return ErrNoteDoesntBelongToThisUser
