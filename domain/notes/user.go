@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	ErrNoteDoesntBelongToThisUser = errors.New("note doesn't belong to this user")
+	ErrNoteDoesntBelongToThisUser     = errors.New("note doesn't belong to this user")
+	ErrReminderDoesntBelongToThisUser = errors.New("reminder doesn't belong to this user")
 )
 
 type User struct {
@@ -62,9 +63,23 @@ func (u User) ScheduleAReminder(note Note, cronExpression, rawEndsAt string, rep
 	return newReminder(note.ID, u.ID, cronExpression, rawEndsAt, repeats)
 }
 
+func (u User) RescheduleAReminder(reminder *Reminder, cronExpression, rawEndsAt string, repeats uint) error {
+	if err := u.validateReminderBelongsToUser(reminder); err != nil {
+		return err
+	}
+	return reminder.reschedule(cronExpression, rawEndsAt, repeats)
+}
+
 func (u User) validateNoteBelongsToUser(note *Note) error {
 	if u.ID != note.UserID {
 		return ErrNoteDoesntBelongToThisUser
+	}
+	return nil
+}
+
+func (u User) validateReminderBelongsToUser(reminder *Reminder) error {
+	if u.ID != reminder.UserID {
+		return ErrReminderDoesntBelongToThisUser
 	}
 	return nil
 }

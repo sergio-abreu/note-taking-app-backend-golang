@@ -288,7 +288,7 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminder).Should(
-			BeAReminder(note.ID, user.ID, cronExpression, time.Time{}, repeats))
+			BeAReminder(note.ID, user.ID, cronExpression, time.Time{}, repeats, time.Now(), time.Time{}))
 	})
 
 	t.Run("Schedule a reminder to repeat 3 times successfully", func(t *testing.T) {
@@ -304,7 +304,7 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminder).Should(
-			BeAReminder(note.ID, user.ID, cronExpression, time.Time{}, repeats))
+			BeAReminder(note.ID, user.ID, cronExpression, time.Time{}, repeats, time.Now(), time.Time{}))
 	})
 
 	t.Run("Schedule a reminder to repeat until certain date successfully", func(t *testing.T) {
@@ -321,7 +321,7 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminder).Should(
-			BeAReminder(note.ID, user.ID, cronExpression, endsAt, repeats))
+			BeAReminder(note.ID, user.ID, cronExpression, endsAt, repeats, time.Now(), time.Time{}))
 	})
 
 	t.Run("Don't create a reminder when endsAt date format is invalid", func(t *testing.T) {
@@ -341,11 +341,9 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 		note, err := user.CreateNote("title test", "description test")
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
-		cronExpression := "0 1 * * *"
-		repeats := uint(1)
 		endsAt := time.Now().AddDate(0, 1, 0)
 
-		_, err = user.ScheduleAReminder(note, cronExpression, endsAt.Format(time.RFC3339), repeats)
+		_, err = user.ScheduleAReminder(note, "0 1 * * *", endsAt.Format(time.RFC3339), 1)
 
 		g.Expect(err).Should(
 			MatchError(ErrCannotConfigureEndsAtAndRepeats))
@@ -356,9 +354,8 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 		note, err := user.CreateNote("title test", "description test")
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
-		cronExpression := "0"
 
-		_, err = user.ScheduleAReminder(note, cronExpression, "", 0)
+		_, err = user.ScheduleAReminder(note, "0", "", 0)
 
 		g.Expect(err).Should(
 			MatchError(ErrInvalidCronExpression))
@@ -369,26 +366,163 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 		note, err := user.CreateNote("title test", "description test")
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
-		cronExpression := "0 * * * *"
 
-		_, err = user.ScheduleAReminder(note, cronExpression, "", 0)
+		_, err = user.ScheduleAReminder(note, "0 * * * *", "", 0)
 
 		g.Expect(err).Should(
 			MatchError(ErrExceededMinimumTimeInterval))
 	})
 
-	t.Run("Don't create a reminder when interval is bellow 24 hours", func(t *testing.T) {
+	t.Run("Don't create a reminder when it doesn't belong to this user", func(t *testing.T) {
 		user1 := FakeUser(t)
 		user2 := FakeUser(t)
 		noteFromUser2, err := user2.CreateNote("test title", "test description")
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
-		cronExpression := "0 * * * *"
 
-		_, err = user1.ScheduleAReminder(noteFromUser2, cronExpression, "", 0)
+		_, err = user1.ScheduleAReminder(noteFromUser2, "0 * * * *", "", 0)
 
 		g.Expect(err).Should(
 			MatchError(ErrNoteDoesntBelongToThisUser))
+	})
+}
+
+func TestNote_RescheduleAReminder(t *testing.T) {
+	g := NewWithT(t)
+
+	t.Run("Reschedule a reminder to repeat forever successfully", func(t *testing.T) {
+		user := FakeUser(t)
+		note, err := user.CreateNote("title test", "description test")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		reminder, err := user.ScheduleAReminder(note, "0 5 * * *", "", 5)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		cronExpression := "0 1 * * *"
+		repeats := uint(0)
+
+		err = user.RescheduleAReminder(&reminder, cronExpression, "", repeats)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		g.Expect(reminder).Should(
+			BeAReminder(note.ID, user.ID, cronExpression, time.Time{}, repeats, time.Now(), time.Now()))
+	})
+
+	t.Run("Reschedule a reminder to repeat 3 times successfully", func(t *testing.T) {
+		user := FakeUser(t)
+		note, err := user.CreateNote("title test", "description test")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		reminder, err := user.ScheduleAReminder(note, "0 5 * * *", "", 0)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		cronExpression := "0 1 * * *"
+		repeats := uint(3)
+
+		err = user.RescheduleAReminder(&reminder, cronExpression, "", repeats)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		g.Expect(reminder).Should(
+			BeAReminder(note.ID, user.ID, cronExpression, time.Time{}, repeats, time.Now(), time.Now()))
+	})
+
+	t.Run("Reschedule a reminder to repeat until certain date successfully", func(t *testing.T) {
+		user := FakeUser(t)
+		note, err := user.CreateNote("title test", "description test")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		reminder, err := user.ScheduleAReminder(note, "0 5 * * *", "", 0)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		cronExpression := "0 1 * * *"
+		repeats := uint(0)
+		endsAt := time.Now().AddDate(0, 1, 0)
+
+		err = user.RescheduleAReminder(&reminder, cronExpression, endsAt.Format(time.RFC3339), repeats)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		g.Expect(reminder).Should(
+			BeAReminder(note.ID, user.ID, cronExpression, endsAt, repeats, time.Now(), time.Now()))
+	})
+
+	t.Run("Don't reschedule a reminder when endsAt date format is invalid", func(t *testing.T) {
+		user := FakeUser(t)
+		note, err := user.CreateNote("title test", "description test")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		reminder, err := user.ScheduleAReminder(note, "0 5 * * *", "", 0)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		err = user.RescheduleAReminder(&reminder, "0 1 * * *", "invalid-format", 0)
+
+		g.Expect(err).Should(
+			MatchError(ErrInvalidEndsAt))
+	})
+
+	t.Run("Don't reschedule a reminder when configured both endsAt and repeats", func(t *testing.T) {
+		user := FakeUser(t)
+		note, err := user.CreateNote("title test", "description test")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		reminder, err := user.ScheduleAReminder(note, "0 5 * * *", "", 0)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		endsAt := time.Now().AddDate(0, 1, 0)
+
+		err = user.RescheduleAReminder(&reminder, "0 1 * * *", endsAt.Format(time.RFC3339), 1)
+
+		g.Expect(err).Should(
+			MatchError(ErrCannotConfigureEndsAtAndRepeats))
+	})
+
+	t.Run("Don't reschedule a reminder when cron expression is invalid", func(t *testing.T) {
+		user := FakeUser(t)
+		note, err := user.CreateNote("title test", "description test")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		reminder, err := user.ScheduleAReminder(note, "0 5 * * *", "", 0)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		err = user.RescheduleAReminder(&reminder, "0", "", 0)
+
+		g.Expect(err).Should(
+			MatchError(ErrInvalidCronExpression))
+	})
+
+	t.Run("Don't reschedule a reminder when interval is bellow 24 hours", func(t *testing.T) {
+		user := FakeUser(t)
+		note, err := user.CreateNote("title test", "description test")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		reminder, err := user.ScheduleAReminder(note, "0 5 * * *", "", 0)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		err = user.RescheduleAReminder(&reminder, "0 * * * *", "", 0)
+
+		g.Expect(err).Should(
+			MatchError(ErrExceededMinimumTimeInterval))
+	})
+
+	t.Run("Don't reschedule a reminder when it doesn't belong to this user", func(t *testing.T) {
+		user1 := FakeUser(t)
+		user2 := FakeUser(t)
+		noteFromUser2, err := user2.CreateNote("test title", "test description")
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		reminderFromUser2, err := user2.ScheduleAReminder(noteFromUser2, "0 5 * * *", "", 0)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		err = user1.RescheduleAReminder(&reminderFromUser2, "0 * * * *", "", 0)
+
+		g.Expect(err).Should(
+			MatchError(ErrReminderDoesntBelongToThisUser))
 	})
 }
 
@@ -398,6 +532,8 @@ func BeAReminder(
 	cronExpression string,
 	endsAt time.Time,
 	repeats uint,
+	createdAt time.Time,
+	updatedAt time.Time,
 ) types.GomegaMatcher {
 	return MatchAllFields(Fields{
 		"ID":             Not(Equal(uuid.Nil)),
@@ -406,6 +542,8 @@ func BeAReminder(
 		"CronExpression": Equal(cronExpression),
 		"EndsAt":         BeTemporally("~", endsAt, time.Second),
 		"Repeats":        BeEquivalentTo(repeats),
+		"CreatedAt":      BeTemporally("~", createdAt, time.Second),
+		"UpdatedAt":      BeTemporally("~", updatedAt, time.Second),
 	})
 }
 
