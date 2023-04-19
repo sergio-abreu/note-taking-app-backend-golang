@@ -53,7 +53,12 @@ func (r RemindersRepository) ScheduleReminder(ctx context.Context, reminder note
 			return err
 		}
 
-		sql := fmt.Sprintf(`
+		return r.scheduleCron(ctx, reminder)
+	})
+}
+
+func (r RemindersRepository) scheduleCron(ctx context.Context, reminder notes.Reminder) error {
+	sql := fmt.Sprintf(`
 			SELECT cron.schedule(?, ?,
 				$$
 				SELECT status
@@ -66,19 +71,27 @@ func (r RemindersRepository) ScheduleReminder(ctx context.Context, reminder note
 				$$
 			  );
 		`, reminder.ID, reminder.ID, reminder.NoteID, reminder.UserID)
-		err = r.db.WithContext(ctx).
-			Exec(sql, reminder.NoteID, reminder.CronExpression).Error
+	err := r.db.WithContext(ctx).
+		Exec(sql, reminder.NoteID, reminder.CronExpression).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r RemindersRepository) RescheduleReminder(ctx context.Context, reminder notes.Reminder) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		err := tx.WithContext(ctx).
+			Table("reminders").
+			Select("cron_expression", "ends_at", "repeats", "updated_at").
+			Where("id = ?", reminder.ID).
+			Updates(&reminder).Error
 		if err != nil {
 			return err
 		}
 
-		return nil
+		return r.scheduleCron(ctx, reminder)
 	})
-}
-
-func (r RemindersRepository) RescheduleReminder(ctx context.Context, reminder notes.Reminder) error {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (r RemindersRepository) DeleteReminder(ctx context.Context, reminder notes.Reminder) error {

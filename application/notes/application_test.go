@@ -226,6 +226,47 @@ func TestApplication(t *testing.T) {
 		g.Expect(reminderFromDb).Should(
 			notes.BeAReminder(t, createNoteResponse.NoteID, fakeUser.ID, cronExpression, time.Time{}, 0, time.Now(), time.Time{}))
 	})
+
+	t.Run("Reschedule a reminder successfully", func(t *testing.T) {
+		t.Parallel()
+
+		fakeUser := notes.FakeUser(t)
+		err := usersRepo.CreateUser(ctx, fakeUser)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		title := "test title"
+		description := "test description"
+		createNoteResponse, err := app.CreateNote(ctx, fakeUser.ID.String(), CreateNoteRequest{
+			Title:       title,
+			Description: description,
+		})
+		createReminderResponse, err := app.ScheduleReminder(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String(), ScheduleReminderRequest{
+			CronExpression: "33 20 19 * *",
+			EndsAt:         "",
+			Repeats:        0,
+		})
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		cronExpression := "28 21 19 * *"
+		repeats := uint(5)
+
+		r, err := app.RescheduleReminder(ctx, fakeUser.ID.String(), createReminderResponse.ReminderID.String(), RescheduleReminderRequest{
+			CronExpression: cronExpression,
+			EndsAt:         "",
+			Repeats:        repeats,
+		})
+
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		g.Expect(r).Should(gstruct.MatchAllFields(gstruct.Fields{
+			"ReminderID": Not(Equal(uuid.Nil)),
+		}))
+		reminderFromDb, err := remindersRepo.FindReminder(ctx, fakeUser.ID.String(), createReminderResponse.ReminderID.String())
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		g.Expect(reminderFromDb).Should(
+			notes.BeAReminder(t, createNoteResponse.NoteID, fakeUser.ID, cronExpression, time.Time{}, repeats, time.Now(), time.Now()))
+	})
 }
 
 func initializeApplication(_ *testing.T) (
