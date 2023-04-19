@@ -267,6 +267,36 @@ func TestApplication(t *testing.T) {
 		g.Expect(reminderFromDb).Should(
 			notes.BeAReminder(t, createNoteResponse.NoteID, fakeUser.ID, cronExpression, time.Time{}, repeats, time.Now(), time.Now()))
 	})
+
+	t.Run("Delete a reminder successfully", func(t *testing.T) {
+		t.Parallel()
+
+		fakeUser := notes.FakeUser(t)
+		err := usersRepo.CreateUser(ctx, fakeUser)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		title := "test title"
+		description := "test description"
+		createNoteResponse, err := app.CreateNote(ctx, fakeUser.ID.String(), CreateNoteRequest{
+			Title:       title,
+			Description: description,
+		})
+		createReminderResponse, err := app.ScheduleReminder(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String(), ScheduleReminderRequest{
+			CronExpression: "33 20 19 * *",
+			EndsAt:         "",
+			Repeats:        0,
+		})
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		err = app.DeleteReminder(ctx, fakeUser.ID.String(), createReminderResponse.ReminderID.String())
+
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		_, err = remindersRepo.FindReminder(ctx, fakeUser.ID.String(), createReminderResponse.ReminderID.String())
+		g.Expect(err).Should(
+			MatchError(notes.ErrReminderNotFound))
+	})
 }
 
 func initializeApplication(_ *testing.T) (

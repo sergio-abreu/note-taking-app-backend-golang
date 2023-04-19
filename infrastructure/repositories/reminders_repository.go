@@ -57,28 +57,6 @@ func (r RemindersRepository) ScheduleReminder(ctx context.Context, reminder note
 	})
 }
 
-func (r RemindersRepository) scheduleCron(ctx context.Context, reminder notes.Reminder) error {
-	sql := fmt.Sprintf(`
-			SELECT cron.schedule(?, ?,
-				$$
-				SELECT status
-				from
-				  http_post(
-					'http://note-taking-app.com/v1/webhooks/reminders/%s',
-					'{"reminder_id": "%s", "note_id": "%s", "user_id": "%s"}',
-					'application/json'
-				  )
-				$$
-			  );
-		`, reminder.ID, reminder.ID, reminder.NoteID, reminder.UserID)
-	err := r.db.WithContext(ctx).
-		Exec(sql, reminder.NoteID, reminder.CronExpression).Error
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (r RemindersRepository) RescheduleReminder(ctx context.Context, reminder notes.Reminder) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		err := tx.WithContext(ctx).
@@ -95,8 +73,39 @@ func (r RemindersRepository) RescheduleReminder(ctx context.Context, reminder no
 }
 
 func (r RemindersRepository) DeleteReminder(ctx context.Context, reminder notes.Reminder) error {
-	//TODO implement me
-	panic("implement me")
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		err := tx.WithContext(ctx).
+			Table("reminders").
+			Where("id = ?", reminder.ID).
+			Delete(&reminder).Error
+		if err != nil {
+			return err
+		}
+
+		return r.unscheduleCron(ctx, reminder.NoteID)
+	})
+}
+
+func (r RemindersRepository) scheduleCron(ctx context.Context, reminder notes.Reminder) error {
+	sql := fmt.Sprintf(`
+			SELECT cron.schedule(?, ?,
+				$$
+				SELECT status
+				from
+				  http_post(
+					'http://note-taking-app.com/v1/webhooks/reminders/%s',
+					'{"reminder_id": "%s", "note_id": "%s", "user_id": "%s"}',
+					'application/json'
+				  )
+				$$
+			  );
+		`, reminder.ID, reminder.ID, reminder.NoteID, reminder.UserID)
+	return r.db.WithContext(ctx).Exec(sql, reminder.NoteID, reminder.CronExpression).Error
+}
+
+func (r RemindersRepository) unscheduleCron(ctx context.Context, noteID uuid.UUID) error {
+	sql := "SELECT cron.unschedule(?);"
+	return r.db.WithContext(ctx).Exec(sql, noteID).Error
 }
 
 func parseReminderID(reminderID string) (uuid.UUID, error) {
