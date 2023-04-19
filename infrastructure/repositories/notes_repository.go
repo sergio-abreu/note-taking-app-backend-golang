@@ -71,8 +71,17 @@ func (n NotesRepository) EditNote(ctx context.Context, note notes.Note) error {
 }
 
 func (n NotesRepository) DeleteNote(ctx context.Context, note notes.Note) error {
-	//TODO implement me
-	panic("implement me")
+	err := n.db.WithContext(ctx).
+		Table("notes").
+		Delete(&note).Error
+	if err == gorm.ErrRecordNotFound {
+		return notes.ErrNoteNotFound
+	}
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (n NotesRepository) MarkAsComplete(ctx context.Context, note notes.Note) error {

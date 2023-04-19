@@ -170,6 +170,29 @@ func TestApplication(t *testing.T) {
 		g.Expect(noteFromDB).Should(
 			notes.BeANote(t, title, description, false, fakeUser.ID, time.Now(), time.Time{}))
 	})
+
+	t.Run("Delete a note successfully", func(t *testing.T) {
+		t.Parallel()
+
+		fakeUser := notes.FakeUser(t)
+		err := usersRepo.CreateUser(ctx, fakeUser)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		title := "test title"
+		description := "test description"
+		r, err := app.CreateNote(ctx, fakeUser.ID.String(), CreateNoteRequest{
+			Title:       title,
+			Description: description,
+		})
+
+		err = app.DeleteNote(ctx, fakeUser.ID.String(), r.NoteID.String())
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		_, err = notesRepo.FindNote(ctx, fakeUser.ID.String(), r.NoteID.String())
+		g.Expect(err).Should(
+			MatchError(notes.ErrNoteNotFound))
+	})
 }
 
 func initializeApplication(_ *testing.T) (
