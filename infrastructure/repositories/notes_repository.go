@@ -44,7 +44,8 @@ func (n NotesRepository) FindNote(ctx context.Context, rawUserID, rawNoteID stri
 func (n NotesRepository) CreateNote(ctx context.Context, note notes.Note) error {
 	err := n.db.WithContext(ctx).
 		Table("notes").
-		Omit("completed", "updated_at").
+		Select("id", "title", "description", "user_id", "created_at").
+		Omit("updated_at").
 		Create(&note).Error
 	if err != nil {
 		return err
@@ -54,8 +55,19 @@ func (n NotesRepository) CreateNote(ctx context.Context, note notes.Note) error 
 }
 
 func (n NotesRepository) EditNote(ctx context.Context, note notes.Note) error {
-	//TODO implement me
-	panic("implement me")
+	err := n.db.WithContext(ctx).
+		Table("notes").
+		Select("title", "description", "updated_at").
+		Where("id = ?", note.ID).
+		Updates(&note).Error
+	if err == gorm.ErrRecordNotFound {
+		return notes.ErrNoteNotFound
+	}
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (n NotesRepository) DeleteNote(ctx context.Context, note notes.Note) error {

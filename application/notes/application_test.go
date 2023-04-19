@@ -21,6 +21,8 @@ func TestApplication(t *testing.T) {
 		Not(HaveOccurred()))
 
 	t.Run("Create a note successfully", func(t *testing.T) {
+		t.Parallel()
+
 		fakeUser := notes.FakeUser(t)
 		err := usersRepo.CreateUser(ctx, fakeUser)
 		g.Expect(err).Should(
@@ -43,6 +45,38 @@ func TestApplication(t *testing.T) {
 			Not(HaveOccurred()))
 		g.Expect(noteFromDB).Should(
 			notes.BeANote(t, title, description, false, fakeUser.ID, time.Now(), time.Time{}))
+	})
+
+	t.Run("Edit a note successfully", func(t *testing.T) {
+		t.Parallel()
+
+		fakeUser := notes.FakeUser(t)
+		err := usersRepo.CreateUser(ctx, fakeUser)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		createNoteResponse, err := app.CreateNote(ctx, fakeUser.ID.String(), CreateNoteRequest{
+			Title:       "test title",
+			Description: "test description",
+		})
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		editedTitle := "edited test title"
+		editedDescription := "edited test description"
+
+		r, err := app.EditNote(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String(), EditNoteRequest{
+			Title:       editedTitle,
+			Description: editedDescription,
+		})
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		g.Expect(r).Should(gstruct.MatchAllFields(gstruct.Fields{
+			"NoteID": Equal(r.NoteID),
+		}))
+		noteFromDB, err := notesRepo.FindNote(ctx, fakeUser.ID.String(), r.NoteID.String())
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		g.Expect(noteFromDB).Should(
+			notes.BeANote(t, editedTitle, editedDescription, false, fakeUser.ID, time.Now(), time.Now()))
 	})
 }
 
