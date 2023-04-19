@@ -2,6 +2,7 @@ package notes
 
 import (
 	"errors"
+	"time"
 
 	"github.com/gofrs/uuid"
 )
@@ -12,9 +13,11 @@ var (
 )
 
 type User struct {
-	ID    uuid.UUID
-	Name  string
-	Email string
+	ID        uuid.UUID
+	Name      string
+	Email     string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func (u User) CreateNote(title, description string) (Note, error) {

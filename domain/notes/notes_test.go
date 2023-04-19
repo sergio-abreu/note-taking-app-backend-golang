@@ -4,11 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/brianvoe/gofakeit"
-	"github.com/gofrs/uuid"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gstruct"
-	"github.com/onsi/gomega/types"
 )
 
 func TestNote_CreateNote(t *testing.T) {
@@ -24,7 +20,7 @@ func TestNote_CreateNote(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(note).Should(
-			BeANote(title, description, false, user.ID, time.Now(), time.Time{}))
+			BeANote(t, title, description, false, user.ID, time.Now(), time.Time{}))
 	})
 
 	t.Run("Don't create note when title is empty", func(t *testing.T) {
@@ -55,7 +51,7 @@ func TestNote_EditNote(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(note).Should(
-			BeANote(newTitle, newDescription, false, user.ID, time.Now(), time.Now()))
+			BeANote(t, newTitle, newDescription, false, user.ID, time.Now(), time.Now()))
 	})
 
 	t.Run("Don't edit note when title is empty", func(t *testing.T) {
@@ -104,7 +100,7 @@ func TestNote_MarkNoteAsComplete(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(note).Should(
-			BeANote(title, description, true, user.ID, time.Now(), time.Now()))
+			BeANote(t, title, description, true, user.ID, time.Now(), time.Now()))
 	})
 
 	t.Run("Don't complete a note when it's already completed", func(t *testing.T) {
@@ -155,7 +151,7 @@ func TestNote_MarkNoteAsInProgress(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(note).Should(
-			BeANote(title, description, false, user.ID, time.Now(), time.Now()))
+			BeANote(t, title, description, false, user.ID, time.Now(), time.Now()))
 	})
 
 	t.Run("Don't mark note as in progress when it's already in progress", func(t *testing.T) {
@@ -203,7 +199,7 @@ func TestNote_CopyNote(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(note2).Should(
-			BeANote(title, description, false, user.ID, time.Now(), time.Time{}))
+			BeANote(t, title, description, false, user.ID, time.Now(), time.Time{}))
 	})
 
 	t.Run("Copy a completed note successfully", func(t *testing.T) {
@@ -222,7 +218,7 @@ func TestNote_CopyNote(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(note2).Should(
-			BeANote(title, description, false, user.ID, time.Now(), time.Time{}))
+			BeANote(t, title, description, false, user.ID, time.Now(), time.Time{}))
 	})
 
 	t.Run("Don't copy a note when it doesn't belong to this user", func(t *testing.T) {
@@ -255,7 +251,7 @@ func TestNote_DeleteNote(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(note).Should(
-			BeANote(title, description, false, user.ID, time.Now(), time.Time{}))
+			BeANote(t, title, description, false, user.ID, time.Now(), time.Time{}))
 	})
 
 	t.Run("Don't delete note when it doesn't belong to this user", func(t *testing.T) {
@@ -288,7 +284,7 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminder).Should(
-			BeAReminder(note.ID, user.ID, cronExpression, time.Time{}, repeats, time.Now(), time.Time{}))
+			BeAReminder(t, note.ID, user.ID, cronExpression, time.Time{}, repeats, time.Now(), time.Time{}))
 	})
 
 	t.Run("Schedule a reminder to repeat 3 times successfully", func(t *testing.T) {
@@ -304,7 +300,7 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminder).Should(
-			BeAReminder(note.ID, user.ID, cronExpression, time.Time{}, repeats, time.Now(), time.Time{}))
+			BeAReminder(t, note.ID, user.ID, cronExpression, time.Time{}, repeats, time.Now(), time.Time{}))
 	})
 
 	t.Run("Schedule a reminder to repeat until certain date successfully", func(t *testing.T) {
@@ -321,7 +317,7 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminder).Should(
-			BeAReminder(note.ID, user.ID, cronExpression, endsAt, repeats, time.Now(), time.Time{}))
+			BeAReminder(t, note.ID, user.ID, cronExpression, endsAt, repeats, time.Now(), time.Time{}))
 	})
 
 	t.Run("Don't create a reminder when endsAt date format is invalid", func(t *testing.T) {
@@ -406,7 +402,7 @@ func TestNote_RescheduleAReminder(t *testing.T) {
 			Not(HaveOccurred()))
 
 		g.Expect(reminder).Should(
-			BeAReminder(note.ID, user.ID, cronExpression, time.Time{}, repeats, time.Now(), time.Now()))
+			BeAReminder(t, note.ID, user.ID, cronExpression, time.Time{}, repeats, time.Now(), time.Now()))
 	})
 
 	t.Run("Reschedule a reminder to repeat 3 times successfully", func(t *testing.T) {
@@ -425,7 +421,7 @@ func TestNote_RescheduleAReminder(t *testing.T) {
 			Not(HaveOccurred()))
 
 		g.Expect(reminder).Should(
-			BeAReminder(note.ID, user.ID, cronExpression, time.Time{}, repeats, time.Now(), time.Now()))
+			BeAReminder(t, note.ID, user.ID, cronExpression, time.Time{}, repeats, time.Now(), time.Now()))
 	})
 
 	t.Run("Reschedule a reminder to repeat until certain date successfully", func(t *testing.T) {
@@ -445,7 +441,7 @@ func TestNote_RescheduleAReminder(t *testing.T) {
 			Not(HaveOccurred()))
 
 		g.Expect(reminder).Should(
-			BeAReminder(note.ID, user.ID, cronExpression, endsAt, repeats, time.Now(), time.Now()))
+			BeAReminder(t, note.ID, user.ID, cronExpression, endsAt, repeats, time.Now(), time.Now()))
 	})
 
 	t.Run("Don't reschedule a reminder when endsAt date format is invalid", func(t *testing.T) {
@@ -559,53 +555,4 @@ func TestNote_DeleteReminder(t *testing.T) {
 		g.Expect(err).Should(
 			MatchError(ErrReminderDoesntBelongToThisUser))
 	})
-}
-
-func BeAReminder(
-	noteID uuid.UUID,
-	userID uuid.UUID,
-	cronExpression string,
-	endsAt time.Time,
-	repeats uint,
-	createdAt time.Time,
-	updatedAt time.Time,
-) types.GomegaMatcher {
-	return MatchAllFields(Fields{
-		"ID":             Not(Equal(uuid.Nil)),
-		"NoteID":         Equal(noteID),
-		"UserID":         Equal(userID),
-		"CronExpression": Equal(cronExpression),
-		"EndsAt":         BeTemporally("~", endsAt, time.Second),
-		"Repeats":        BeEquivalentTo(repeats),
-		"CreatedAt":      BeTemporally("~", createdAt, time.Second),
-		"UpdatedAt":      BeTemporally("~", updatedAt, time.Second),
-	})
-}
-
-func BeANote(
-	title string,
-	description string,
-	completed bool,
-	userID uuid.UUID,
-	createdAt time.Time,
-	updatedAt time.Time,
-) types.GomegaMatcher {
-	return MatchAllFields(Fields{
-		"ID":          Not(Equal(uuid.Nil)),
-		"Title":       Equal(title),
-		"Description": Equal(description),
-		"Completed":   Equal(completed),
-		"UserID":      Equal(userID),
-		"CreatedAt":   BeTemporally("~", createdAt, time.Second),
-		"UpdatedAt":   BeTemporally("~", updatedAt, time.Second),
-	})
-}
-
-func FakeUser(_ *testing.T) User {
-	fakeUser := gofakeit.Person()
-	return User{
-		ID:    uuid.FromStringOrNil(gofakeit.UUID()),
-		Name:  fakeUser.FirstName,
-		Email: fakeUser.Contact.Email,
-	}
 }
