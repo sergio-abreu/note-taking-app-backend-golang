@@ -142,6 +142,34 @@ func TestApplication(t *testing.T) {
 		g.Expect(noteFromDB).Should(
 			notes.BeANote(t, title, description, false, fakeUser.ID, time.Now(), time.Now()))
 	})
+
+	t.Run("Copy a note successfully", func(t *testing.T) {
+		t.Parallel()
+
+		fakeUser := notes.FakeUser(t)
+		err := usersRepo.CreateUser(ctx, fakeUser)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		title := "test title"
+		description := "test description"
+		createNoteResponse, err := app.CreateNote(ctx, fakeUser.ID.String(), CreateNoteRequest{
+			Title:       title,
+			Description: description,
+		})
+
+		r, err := app.CopyNote(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String())
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+
+		g.Expect(r).Should(gstruct.MatchAllFields(gstruct.Fields{
+			"NoteID": Not(Equal(uuid.Nil)),
+		}))
+		noteFromDB, err := notesRepo.FindNote(ctx, fakeUser.ID.String(), r.NoteID.String())
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		g.Expect(noteFromDB).Should(
+			notes.BeANote(t, title, description, false, fakeUser.ID, time.Now(), time.Time{}))
+	})
 }
 
 func initializeApplication(_ *testing.T) (
