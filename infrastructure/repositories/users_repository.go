@@ -40,6 +40,7 @@ func (u UsersRepository) FindUser(ctx context.Context, userID string) (notes.Use
 func (u UsersRepository) CreateUser(ctx context.Context, user notes.User) error {
 	err := u.db.WithContext(ctx).
 		Table("users").
+		Select("id", "name", "email", "created_at").
 		Omit("updated_at").
 		Create(&user).Error
 	if err != nil {

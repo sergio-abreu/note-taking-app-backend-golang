@@ -6,8 +6,9 @@ import (
 )
 
 var (
-	ErrInvalidReminderID = errors.New("invalid reminder id")
-	ErrReminderNotFound  = errors.New("reminder not found")
+	ErrEmptyReminderID         = errors.New("empty reminder id")
+	ErrInvalidReminderIDFormat = errors.New("invalid reminder id format")
+	ErrReminderNotFound        = errors.New("reminder not found")
 )
 
 type RemindersRepository interface {

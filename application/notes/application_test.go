@@ -16,7 +16,7 @@ import (
 func TestApplication(t *testing.T) {
 	g := NewWithT(t)
 	ctx := context.Background()
-	usersRepo, notesRepo, _, app, err := initializeApplication(t)
+	usersRepo, notesRepo, remindersRepo, app, err := initializeApplication(t)
 	g.Expect(err).Should(
 		Not(HaveOccurred()))
 
@@ -130,9 +130,9 @@ func TestApplication(t *testing.T) {
 			Not(HaveOccurred()))
 
 		r, err := app.MarkNoteAsInProgress(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String())
+
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
-
 		g.Expect(r).Should(gstruct.MatchAllFields(gstruct.Fields{
 			"NoteID": Equal(r.NoteID),
 		}))
@@ -158,9 +158,9 @@ func TestApplication(t *testing.T) {
 		})
 
 		r, err := app.CopyNote(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String())
+
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
-
 		g.Expect(r).Should(gstruct.MatchAllFields(gstruct.Fields{
 			"NoteID": Not(Equal(uuid.Nil)),
 		}))
@@ -193,6 +193,39 @@ func TestApplication(t *testing.T) {
 		g.Expect(err).Should(
 			MatchError(notes.ErrNoteNotFound))
 	})
+
+	t.Run("Schedule a reminder successfully", func(t *testing.T) {
+		t.Parallel()
+
+		fakeUser := notes.FakeUser(t)
+		err := usersRepo.CreateUser(ctx, fakeUser)
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		title := "test title"
+		description := "test description"
+		createNoteResponse, err := app.CreateNote(ctx, fakeUser.ID.String(), CreateNoteRequest{
+			Title:       title,
+			Description: description,
+		})
+		cronExpression := "33 20 19 * *"
+
+		r, err := app.ScheduleReminder(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String(), ScheduleReminderRequest{
+			CronExpression: cronExpression,
+			EndsAt:         "",
+			Repeats:        0,
+		})
+
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		g.Expect(r).Should(gstruct.MatchAllFields(gstruct.Fields{
+			"ReminderID": Not(Equal(uuid.Nil)),
+		}))
+		reminderFromDb, err := remindersRepo.FindReminder(ctx, fakeUser.ID.String(), r.ReminderID.String())
+		g.Expect(err).Should(
+			Not(HaveOccurred()))
+		g.Expect(reminderFromDb).Should(
+			notes.BeAReminder(t, createNoteResponse.NoteID, fakeUser.ID, cronExpression, time.Time{}, 0, time.Now(), time.Time{}))
+	})
 }
 
 func initializeApplication(_ *testing.T) (
@@ -209,7 +242,7 @@ func initializeApplication(_ *testing.T) (
 	db = db.Debug()
 	usersRepo := repositories.NewUsersRepository(db)
 	notesRepo := repositories.NewNotesRepository(db)
-	var remindersRepo notes.RemindersRepository
+	remindersRepo := repositories.NewRemindersRepository(db)
 	app := NewApplication(
 		usersRepo,
 		notesRepo,

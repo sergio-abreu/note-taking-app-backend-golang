@@ -13,6 +13,8 @@ services:
       POSTGRES_PASSWORD: note-taking
     volumes:
       - ./.docker/postgresql:/var/lib/postgresql/data
+    extra_hosts:
+      - "note-taking-app.com:172.17.0.1"
 
   adminer:
     image: adminer
