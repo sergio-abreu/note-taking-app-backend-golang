@@ -93,13 +93,13 @@ func (r RemindersRepository) scheduleCron(ctx context.Context, reminder notes.Re
 				SELECT status
 				from
 				  http_post(
-					'http://note-taking-app.com/v1/webhooks/reminders/%s',
-					'{"reminder_id": "%s", "note_id": "%s", "user_id": "%s"}',
+					'http://rabbitmq:15672/api/exchanges/note-taking/reminders/publish',
+					'{"properties":{},"routing_key":"","payload":"{\"reminder_id\": \"%s\", \"note_id\": \"%s\", \"user_id\": \"%s\"}","payload_encoding":"string"}',
 					'application/json'
 				  )
 				$$
 			  );
-		`, reminder.ID, reminder.ID, reminder.NoteID, reminder.UserID)
+		`, reminder.ID, reminder.NoteID, reminder.UserID)
 	return r.db.WithContext(ctx).Exec(sql, reminder.NoteID, reminder.CronExpression).Error
 }
 

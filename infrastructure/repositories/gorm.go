@@ -2,10 +2,11 @@ package repositories
 
 import (
 	"fmt"
-	"os"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"github.com/sergio-abreu/note-taking-app-backend-golang/infrastructure"
 )
 
 func NewGormDB(host, user, pass, dbName, port string) (*gorm.DB, error) {
@@ -14,18 +15,10 @@ func NewGormDB(host, user, pass, dbName, port string) (*gorm.DB, error) {
 }
 
 func NewGormDBFromEnv() (*gorm.DB, error) {
-	host := getEnvWithDefault("PG_HOST", "127.0.0.1")
-	user := getEnvWithDefault("PG_USER", "note-taking")
-	pass := getEnvWithDefault("PG_PASSWORD", "note-taking")
-	dbName := getEnvWithDefault("PG_DATABASE", "postgres")
-	port := getEnvWithDefault("PG_PORT", "5432")
+	host := infrastructure.GetEnvWithDefault("PG_HOST", "127.0.0.1")
+	user := infrastructure.GetEnvWithDefault("PG_USER", "note-taking")
+	pass := infrastructure.GetEnvWithDefault("PG_PASSWORD", "note-taking")
+	dbName := infrastructure.GetEnvWithDefault("PG_DATABASE", "note-taking-app")
+	port := infrastructure.GetEnvWithDefault("PG_PORT", "5432")
 	return NewGormDB(host, user, pass, dbName, port)
-}
-
-func getEnvWithDefault(env string, defaultValue string) string {
-	value := os.Getenv(env)
-	if len(value) == 0 {
-		return defaultValue
-	}
-	return value
 }
