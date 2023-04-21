@@ -1,9 +1,11 @@
-version: '3.1'
+version: '3.9'
 
 services:
 
   postgresql:
-    image: ticketech/postgres_cron
+    build:
+      context: .
+      dockerfile: DockerfilePostgres
     restart: always
     ports:
       - "5432:5432"
@@ -11,16 +13,23 @@ services:
       POSTGRES_DB: note-taking-app
       POSTGRES_USER: note-taking
       POSTGRES_PASSWORD: note-taking
-    volumes:
-      - ./.docker/postgresql:/var/lib/postgresql/data
-    extra_hosts:
-      - "note-taking-app.com:172.17.0.1"
 
   adminer:
     image: adminer
     restart: always
     ports:
       - "8090:8080"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: note-taking
+      RABBITMQ_DEFAULT_PASS: note-taking
+      RABBITMQ_DEFAULT_VHOST: note-taking
 
   migration:
     depends_on:
@@ -32,7 +41,7 @@ services:
       PG_PASSWORD: note-taking
       PG_HOST: postgresql
       PG_PORT: 5432
-      PG_DB: postgres
+      PG_DB: note-taking-app
     volumes:
       - "./infrastructure/migrations:/migrations"
     command: "-path=/migrations/ -database \"postgres://${PG_USER}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${PG_DB}?sslmode=disable\" up"
