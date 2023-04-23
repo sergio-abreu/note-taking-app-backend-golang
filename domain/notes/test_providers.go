@@ -6,6 +6,7 @@ import (
 
 	"github.com/brianvoe/gofakeit"
 	"github.com/gofrs/uuid"
+	"github.com/golang/mock/gomock"
 	"github.com/onsi/gomega"
 	"github.com/onsi/gomega/gstruct"
 	"github.com/onsi/gomega/types"
@@ -59,4 +60,23 @@ func FakeUser(_ *testing.T) User {
 		Email:     fakeUser.Contact.Email,
 		CreatedAt: time.Now(),
 	}
+}
+
+type matcher struct {
+	types.GomegaMatcher
+	x interface{}
+}
+
+func (m matcher) Matches(x interface{}) bool {
+	m.x = x
+	result, _ := m.Match(x)
+	return result
+}
+
+func (m matcher) String() string {
+	return m.FailureMessage(m.x)
+}
+
+func Wrap(gmatcher types.GomegaMatcher) gomock.Matcher {
+	return matcher{gmatcher, nil}
 }
