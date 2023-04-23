@@ -44,9 +44,13 @@ func (r RemindersRepository) FindReminder(ctx context.Context, rawUserID, rawRem
 
 func (r RemindersRepository) ScheduleReminder(ctx context.Context, reminder notes.Reminder) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		fields := []string{"id", "note_id", "user_id", "cron_expression", "created_at"}
+		if !reminder.EndsAt.IsZero() {
+			fields = append(fields, "ends_at")
+		}
 		err := tx.WithContext(ctx).
 			Table("reminders").
-			Select("id", "note_id", "user_id", "cron_expression", "ends_at", "repeats", "created_at").
+			Select(fields).
 			Omit("updated_at").
 			Create(&reminder).Error
 		if err != nil {
@@ -59,9 +63,13 @@ func (r RemindersRepository) ScheduleReminder(ctx context.Context, reminder note
 
 func (r RemindersRepository) RescheduleReminder(ctx context.Context, reminder notes.Reminder) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		fields := []string{"cron_expression", "updated_at"}
+		if !reminder.EndsAt.IsZero() {
+			fields = append(fields, "ends_at")
+		}
 		err := tx.WithContext(ctx).
 			Table("reminders").
-			Select("cron_expression", "ends_at", "repeats", "updated_at").
+			Select(fields).
 			Where("id = ?", reminder.ID).
 			Updates(&reminder).Error
 		if err != nil {
@@ -82,30 +90,18 @@ func (r RemindersRepository) DeleteReminder(ctx context.Context, reminder notes.
 			return err
 		}
 
-		return r.unscheduleCron(ctx, reminder.NoteID)
+		return r.unscheduleCron(ctx, reminder.ID)
 	})
 }
 
 func (r RemindersRepository) scheduleCron(ctx context.Context, reminder notes.Reminder) error {
-	sql := fmt.Sprintf(`
-			SELECT cron.schedule(?, ?,
-				$$
-				SELECT status
-				from
-				  http_post(
-					'http://rabbitmq:15672/api/exchanges/note-taking/reminders/publish',
-					'{"properties":{},"routing_key":"","payload":"{\"reminder_id\": \"%s\", \"note_id\": \"%s\", \"user_id\": \"%s\"}","payload_encoding":"string"}',
-					'application/json'
-				  )
-				$$
-			  );
-		`, reminder.ID, reminder.NoteID, reminder.UserID)
-	return r.db.WithContext(ctx).Exec(sql, reminder.NoteID, reminder.CronExpression).Error
+	sql := fmt.Sprintf("SELECT cron.schedule(?, ?, $$ SELECT publish_reminder('%s'); $$);", reminder.ID)
+	return r.db.WithContext(ctx).Exec(sql, reminder.ID, reminder.CronExpression).Error
 }
 
-func (r RemindersRepository) unscheduleCron(ctx context.Context, noteID uuid.UUID) error {
+func (r RemindersRepository) unscheduleCron(ctx context.Context, reminderID uuid.UUID) error {
 	sql := "SELECT cron.unschedule(?);"
-	return r.db.WithContext(ctx).Exec(sql, noteID).Error
+	return r.db.WithContext(ctx).Exec(sql, reminderID).Error
 }
 
 func parseReminderID(reminderID string) (uuid.UUID, error) {

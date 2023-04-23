@@ -284,7 +284,7 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminder).Should(
-			BeAReminder(t, note.ID, user.ID, cronExpression, time.Time{}, repeats, time.Now(), time.Time{}))
+			BeAReminder(t, note.ID, user.ID, cronExpression, time.Time{}, time.Now(), time.Time{}))
 	})
 
 	t.Run("Schedule a reminder to repeat 3 times successfully", func(t *testing.T) {
@@ -294,13 +294,16 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 			Not(HaveOccurred()))
 		cronExpression := "0 1 * * *"
 		repeats := uint(3)
+		refDate := time.Now()
+		endsAtByRepetition := time.Date(refDate.Year(), refDate.Month(), refDate.Day(), 1, 0, 0, 0, refDate.Location()).
+			AddDate(0, 0, int(repeats))
 
 		reminder, err := user.ScheduleAReminder(note, cronExpression, "", repeats)
 
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminder).Should(
-			BeAReminder(t, note.ID, user.ID, cronExpression, time.Time{}, repeats, time.Now(), time.Time{}))
+			BeAReminder(t, note.ID, user.ID, cronExpression, endsAtByRepetition, time.Now(), time.Time{}))
 	})
 
 	t.Run("Schedule a reminder to repeat until certain date successfully", func(t *testing.T) {
@@ -317,7 +320,7 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminder).Should(
-			BeAReminder(t, note.ID, user.ID, cronExpression, endsAt, repeats, time.Now(), time.Time{}))
+			BeAReminder(t, note.ID, user.ID, cronExpression, endsAt, time.Now(), time.Time{}))
 	})
 
 	t.Run("Don't create a reminder when endsAt date format is invalid", func(t *testing.T) {
@@ -402,7 +405,7 @@ func TestNote_RescheduleAReminder(t *testing.T) {
 			Not(HaveOccurred()))
 
 		g.Expect(reminder).Should(
-			BeAReminder(t, note.ID, user.ID, cronExpression, time.Time{}, repeats, time.Now(), time.Now()))
+			BeAReminder(t, note.ID, user.ID, cronExpression, time.Time{}, time.Now(), time.Now()))
 	})
 
 	t.Run("Reschedule a reminder to repeat 3 times successfully", func(t *testing.T) {
@@ -415,13 +418,16 @@ func TestNote_RescheduleAReminder(t *testing.T) {
 			Not(HaveOccurred()))
 		cronExpression := "0 1 * * *"
 		repeats := uint(3)
+		refDate := time.Now()
+		endsAtByRepetition := time.Date(refDate.Year(), refDate.Month(), refDate.Day(), 1, 0, 0, 0, refDate.Location()).
+			AddDate(0, 0, int(repeats))
 
 		err = user.RescheduleAReminder(&reminder, cronExpression, "", repeats)
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 
 		g.Expect(reminder).Should(
-			BeAReminder(t, note.ID, user.ID, cronExpression, time.Time{}, repeats, time.Now(), time.Now()))
+			BeAReminder(t, note.ID, user.ID, cronExpression, endsAtByRepetition, time.Now(), time.Now()))
 	})
 
 	t.Run("Reschedule a reminder to repeat until certain date successfully", func(t *testing.T) {
@@ -441,7 +447,7 @@ func TestNote_RescheduleAReminder(t *testing.T) {
 			Not(HaveOccurred()))
 
 		g.Expect(reminder).Should(
-			BeAReminder(t, note.ID, user.ID, cronExpression, endsAt, repeats, time.Now(), time.Now()))
+			BeAReminder(t, note.ID, user.ID, cronExpression, endsAt, time.Now(), time.Now()))
 	})
 
 	t.Run("Don't reschedule a reminder when endsAt date format is invalid", func(t *testing.T) {

@@ -37,7 +37,6 @@ func BeAReminder(
 	userID uuid.UUID,
 	cronExpression string,
 	endsAt time.Time,
-	repeats uint,
 	createdAt time.Time,
 	updatedAt time.Time,
 ) types.GomegaMatcher {
@@ -47,7 +46,6 @@ func BeAReminder(
 		"UserID":         gomega.Equal(userID),
 		"CronExpression": gomega.Equal(cronExpression),
 		"EndsAt":         gomega.BeTemporally("~", endsAt, time.Second),
-		"Repeats":        gomega.BeEquivalentTo(repeats),
 		"CreatedAt":      gomega.BeTemporally("~", createdAt, time.Second),
 		"UpdatedAt":      gomega.BeTemporally("~", updatedAt, time.Second),
 	})

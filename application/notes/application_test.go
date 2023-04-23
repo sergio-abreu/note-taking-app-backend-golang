@@ -224,7 +224,7 @@ func TestApplication(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminderFromDb).Should(
-			notes.BeAReminder(t, createNoteResponse.NoteID, fakeUser.ID, cronExpression, time.Time{}, 0, time.Now(), time.Time{}))
+			notes.BeAReminder(t, createNoteResponse.NoteID, fakeUser.ID, cronExpression, time.Time{}, time.Now(), time.Time{}))
 	})
 
 	t.Run("Reschedule a reminder successfully", func(t *testing.T) {
@@ -249,6 +249,9 @@ func TestApplication(t *testing.T) {
 			Not(HaveOccurred()))
 		cronExpression := "28 21 19 * *"
 		repeats := uint(5)
+		refDate := time.Now()
+		endsAtByRepetition := time.Date(refDate.Year(), refDate.Month(), 19, 21, 28, 0, 0, refDate.Location()).
+			AddDate(0, int(repeats), 0)
 
 		r, err := app.RescheduleReminder(ctx, fakeUser.ID.String(), createReminderResponse.ReminderID.String(), RescheduleReminderRequest{
 			CronExpression: cronExpression,
@@ -265,7 +268,7 @@ func TestApplication(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminderFromDb).Should(
-			notes.BeAReminder(t, createNoteResponse.NoteID, fakeUser.ID, cronExpression, time.Time{}, repeats, time.Now(), time.Now()))
+			notes.BeAReminder(t, createNoteResponse.NoteID, fakeUser.ID, cronExpression, endsAtByRepetition, time.Now(), time.Now()))
 	})
 
 	t.Run("Delete a reminder successfully", func(t *testing.T) {

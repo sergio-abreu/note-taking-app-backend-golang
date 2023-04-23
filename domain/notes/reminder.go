@@ -16,11 +16,7 @@ var (
 )
 
 func newReminder(noteID, userID uuid.UUID, cronExpression, rawEndsAt string, repeats uint) (Reminder, error) {
-	endsAt, err := validateEndsAt(rawEndsAt)
-	if err != nil {
-		return Reminder{}, err
-	}
-	err = validateRepeats(endsAt, repeats)
+	endsAt, err := validateEndsAt(cronExpression, rawEndsAt, repeats)
 	if err != nil {
 		return Reminder{}, err
 	}
@@ -34,7 +30,6 @@ func newReminder(noteID, userID uuid.UUID, cronExpression, rawEndsAt string, rep
 		UserID:         userID,
 		CronExpression: cronExpression,
 		EndsAt:         endsAt,
-		Repeats:        repeats,
 		CreatedAt:      time.Now(),
 	}, nil
 }
@@ -45,33 +40,37 @@ type Reminder struct {
 	UserID         uuid.UUID
 	CronExpression string
 	EndsAt         time.Time
-	Repeats        uint
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 }
 
 func (r *Reminder) reschedule(cronExpression, rawEndsAt string, repeats uint) error {
-	endsAt, err := validateEndsAt(rawEndsAt)
+	err := validateCronExpression(cronExpression)
 	if err != nil {
 		return err
 	}
-	err = validateRepeats(endsAt, repeats)
-	if err != nil {
-		return err
-	}
-	err = validateCronExpression(cronExpression)
+	endsAt, err := validateEndsAt(cronExpression, rawEndsAt, repeats)
 	if err != nil {
 		return err
 	}
 	r.EndsAt = endsAt
-	r.Repeats = repeats
 	r.CronExpression = cronExpression
 	r.UpdatedAt = time.Now()
 	return nil
 }
 
-func validateEndsAt(rawEndsAt string) (endsAt time.Time, err error) {
-	if len(rawEndsAt) == 0 {
+func validateEndsAt(cronExpression, rawEndsAt string, repeats uint) (endsAt time.Time, err error) {
+	if len(rawEndsAt) == 0 && repeats == 0 {
+		return
+	}
+	if len(rawEndsAt) > 0 && repeats > 0 {
+		return time.Time{}, ErrCannotConfigureEndsAtAndRepeats
+	}
+	if repeats > 0 {
+		endsAt = time.Now()
+		for i := uint(0); i < repeats; i++ {
+			endsAt, _ = gronx.NextTickAfter(cronExpression, endsAt, false)
+		}
 		return
 	}
 	endsAt, err = time.Parse(time.RFC3339, rawEndsAt)
@@ -79,13 +78,6 @@ func validateEndsAt(rawEndsAt string) (endsAt time.Time, err error) {
 		return endsAt, ErrInvalidEndsAt
 	}
 	return
-}
-
-func validateRepeats(endsAt time.Time, repeats uint) error {
-	if !endsAt.IsZero() && repeats > 0 {
-		return ErrCannotConfigureEndsAtAndRepeats
-	}
-	return nil
 }
 
 func validateCronExpression(cronExpression string) error {
