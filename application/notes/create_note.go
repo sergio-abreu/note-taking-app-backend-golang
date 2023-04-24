@@ -16,7 +16,7 @@ type CreateNoteResponse struct {
 }
 
 func (a Application) CreateNote(ctx context.Context, userID string, r CreateNoteRequest) (CreateNoteResponse, error) {
-	user, err := a.usersRepo.FindUser(ctx, userID)
+	user, err := a.notesRepo.FindUser(ctx, userID)
 	if err != nil {
 		return CreateNoteResponse{}, err
 	}

@@ -17,7 +17,7 @@ type ScheduleReminderResponse struct {
 }
 
 func (a Application) ScheduleReminder(ctx context.Context, userID, noteID string, r ScheduleReminderRequest) (ScheduleReminderResponse, error) {
-	user, err := a.usersRepo.FindUser(ctx, userID)
+	user, err := a.notesRepo.FindUser(ctx, userID)
 	if err != nil {
 		return ScheduleReminderResponse{}, err
 	}
@@ -32,7 +32,7 @@ func (a Application) ScheduleReminder(ctx context.Context, userID, noteID string
 		return ScheduleReminderResponse{}, err
 	}
 
-	err = a.remindersRepo.ScheduleReminder(ctx, reminder)
+	err = a.notesRepo.ScheduleReminder(ctx, reminder)
 	if err != nil {
 		return ScheduleReminderResponse{}, err
 	}

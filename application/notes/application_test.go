@@ -16,7 +16,7 @@ import (
 func TestApplication(t *testing.T) {
 	g := NewWithT(t)
 	ctx := context.Background()
-	usersRepo, notesRepo, remindersRepo, app, err := initializeApplication(t)
+	notesRepo, app, err := initializeApplication(t)
 	g.Expect(err).Should(
 		Not(HaveOccurred()))
 
@@ -24,7 +24,7 @@ func TestApplication(t *testing.T) {
 		t.Parallel()
 
 		fakeUser := notes.FakeUser(t)
-		err := usersRepo.CreateUser(ctx, fakeUser)
+		err := notesRepo.CreateUser(ctx, fakeUser)
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		title := "test title"
@@ -51,7 +51,7 @@ func TestApplication(t *testing.T) {
 		t.Parallel()
 
 		fakeUser := notes.FakeUser(t)
-		err := usersRepo.CreateUser(ctx, fakeUser)
+		err := notesRepo.CreateUser(ctx, fakeUser)
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		createNoteResponse, err := app.CreateNote(ctx, fakeUser.ID.String(), CreateNoteRequest{
@@ -84,7 +84,7 @@ func TestApplication(t *testing.T) {
 		t.Parallel()
 
 		fakeUser := notes.FakeUser(t)
-		err := usersRepo.CreateUser(ctx, fakeUser)
+		err := notesRepo.CreateUser(ctx, fakeUser)
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		title := "test title"
@@ -114,7 +114,7 @@ func TestApplication(t *testing.T) {
 		t.Parallel()
 
 		fakeUser := notes.FakeUser(t)
-		err := usersRepo.CreateUser(ctx, fakeUser)
+		err := notesRepo.CreateUser(ctx, fakeUser)
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		title := "test title"
@@ -147,7 +147,7 @@ func TestApplication(t *testing.T) {
 		t.Parallel()
 
 		fakeUser := notes.FakeUser(t)
-		err := usersRepo.CreateUser(ctx, fakeUser)
+		err := notesRepo.CreateUser(ctx, fakeUser)
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		title := "test title"
@@ -175,7 +175,7 @@ func TestApplication(t *testing.T) {
 		t.Parallel()
 
 		fakeUser := notes.FakeUser(t)
-		err := usersRepo.CreateUser(ctx, fakeUser)
+		err := notesRepo.CreateUser(ctx, fakeUser)
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		title := "test title"
@@ -198,7 +198,7 @@ func TestApplication(t *testing.T) {
 		t.Parallel()
 
 		fakeUser := notes.FakeUser(t)
-		err := usersRepo.CreateUser(ctx, fakeUser)
+		err := notesRepo.CreateUser(ctx, fakeUser)
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		title := "test title"
@@ -220,18 +220,36 @@ func TestApplication(t *testing.T) {
 		g.Expect(r).Should(gstruct.MatchAllFields(gstruct.Fields{
 			"ReminderID": Not(Equal(uuid.Nil)),
 		}))
-		reminderFromDb, err := remindersRepo.FindReminder(ctx, fakeUser.ID.String(), r.ReminderID.String())
+		reminderFromDb, err := notesRepo.FindReminder(ctx, fakeUser.ID.String(), r.ReminderID.String())
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminderFromDb).Should(
 			notes.BeAReminder(t, createNoteResponse.NoteID, fakeUser.ID, cronExpression, time.Time{}, time.Now(), time.Time{}))
+
+		t.Run("Cannot schedule more than one reminder to the same note", func(t *testing.T) {
+			_, err = app.ScheduleReminder(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String(), ScheduleReminderRequest{
+				CronExpression: cronExpression,
+				EndsAt:         "",
+				Repeats:        0,
+			})
+
+			g.Expect(err).Should(
+				MatchError(notes.ErrOnlyOneReminderAllowed))
+		})
+
+		t.Run("Delete a note and remove a reminder automatically successfully", func(t *testing.T) {
+			err = app.DeleteNote(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String())
+
+			g.Expect(err).Should(
+				Not(HaveOccurred()))
+		})
 	})
 
 	t.Run("Reschedule a reminder successfully", func(t *testing.T) {
 		t.Parallel()
 
 		fakeUser := notes.FakeUser(t)
-		err := usersRepo.CreateUser(ctx, fakeUser)
+		err := notesRepo.CreateUser(ctx, fakeUser)
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		title := "test title"
@@ -264,7 +282,7 @@ func TestApplication(t *testing.T) {
 		g.Expect(r).Should(gstruct.MatchAllFields(gstruct.Fields{
 			"ReminderID": Not(Equal(uuid.Nil)),
 		}))
-		reminderFromDb, err := remindersRepo.FindReminder(ctx, fakeUser.ID.String(), createReminderResponse.ReminderID.String())
+		reminderFromDb, err := notesRepo.FindReminder(ctx, fakeUser.ID.String(), createReminderResponse.ReminderID.String())
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminderFromDb).Should(
@@ -275,7 +293,7 @@ func TestApplication(t *testing.T) {
 		t.Parallel()
 
 		fakeUser := notes.FakeUser(t)
-		err := usersRepo.CreateUser(ctx, fakeUser)
+		err := notesRepo.CreateUser(ctx, fakeUser)
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		title := "test title"
@@ -296,32 +314,24 @@ func TestApplication(t *testing.T) {
 
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
-		_, err = remindersRepo.FindReminder(ctx, fakeUser.ID.String(), createReminderResponse.ReminderID.String())
+		_, err = notesRepo.FindReminder(ctx, fakeUser.ID.String(), createReminderResponse.ReminderID.String())
 		g.Expect(err).Should(
 			MatchError(notes.ErrReminderNotFound))
 	})
 }
 
 func initializeApplication(_ *testing.T) (
-	notes.UsersRepository,
 	notes.NotesRepository,
-	notes.RemindersRepository,
 	Application,
 	error,
 ) {
 	db, err := repositories.NewGormDBFromEnv()
 	if err != nil {
-		return nil, nil, nil, Application{}, err
+		return nil, Application{}, err
 	}
 	db = db.Debug()
-	usersRepo := repositories.NewUsersRepository(db)
 	notesRepo := repositories.NewNotesRepository(db)
-	remindersRepo := repositories.NewRemindersRepository(db)
-	app := NewApplication(
-		usersRepo,
-		notesRepo,
-		remindersRepo,
-	)
+	app := NewApplication(notesRepo)
 
-	return usersRepo, notesRepo, remindersRepo, app, nil
+	return notesRepo, app, nil
 }

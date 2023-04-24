@@ -17,12 +17,12 @@ type RescheduleReminderResponse struct {
 }
 
 func (a Application) RescheduleReminder(ctx context.Context, userID, reminderID string, r RescheduleReminderRequest) (RescheduleReminderResponse, error) {
-	user, err := a.usersRepo.FindUser(ctx, userID)
+	user, err := a.notesRepo.FindUser(ctx, userID)
 	if err != nil {
 		return RescheduleReminderResponse{}, err
 	}
 
-	reminder, err := a.remindersRepo.FindReminder(ctx, userID, reminderID)
+	reminder, err := a.notesRepo.FindReminder(ctx, userID, reminderID)
 	if err != nil {
 		return RescheduleReminderResponse{}, err
 	}
@@ -32,7 +32,7 @@ func (a Application) RescheduleReminder(ctx context.Context, userID, reminderID 
 		return RescheduleReminderResponse{}, err
 	}
 
-	err = a.remindersRepo.RescheduleReminder(ctx, reminder)
+	err = a.notesRepo.RescheduleReminder(ctx, reminder)
 	if err != nil {
 		return RescheduleReminderResponse{}, err
 	}

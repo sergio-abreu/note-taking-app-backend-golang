@@ -7,12 +7,11 @@ import (
 	"github.com/sergio-abreu/note-taking-app-backend-golang/domain/notes"
 )
 
-func NewApplication(usersRepo notes.UsersRepository, notesRepo notes.NotesRepository, emailer emailer.Emailer) Application {
-	return Application{usersRepo: usersRepo, notesRepo: notesRepo, emailer: emailer}
+func NewApplication(notesRepo notes.NotesRepository, emailer emailer.Emailer) Application {
+	return Application{notesRepo: notesRepo, emailer: emailer}
 }
 
 type Application struct {
-	usersRepo notes.UsersRepository
 	notesRepo notes.NotesRepository
 	emailer   emailer.Emailer
 }
@@ -24,7 +23,7 @@ type SendReminderEmailRequest struct {
 }
 
 func (a Application) SendReminderEmail(ctx context.Context, r SendReminderEmailRequest) error {
-	user, err := a.usersRepo.FindUser(ctx, r.UserID)
+	user, err := a.notesRepo.FindUser(ctx, r.UserID)
 	if err != nil {
 		return err
 	}

@@ -16,7 +16,7 @@ type EditNoteResponse struct {
 }
 
 func (a Application) EditNote(ctx context.Context, userID, noteID string, r EditNoteRequest) (EditNoteResponse, error) {
-	user, err := a.usersRepo.FindUser(ctx, userID)
+	user, err := a.notesRepo.FindUser(ctx, userID)
 	if err != nil {
 		return EditNoteResponse{}, err
 	}

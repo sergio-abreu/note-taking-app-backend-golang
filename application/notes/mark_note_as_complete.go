@@ -11,7 +11,7 @@ type MarkNoteAsCompleteResponse struct {
 }
 
 func (a Application) MarkNoteAsComplete(ctx context.Context, userID, noteID string) (MarkNoteAsCompleteResponse, error) {
-	user, err := a.usersRepo.FindUser(ctx, userID)
+	user, err := a.notesRepo.FindUser(ctx, userID)
 	if err != nil {
 		return MarkNoteAsCompleteResponse{}, err
 	}

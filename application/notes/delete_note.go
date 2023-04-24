@@ -5,7 +5,7 @@ import (
 )
 
 func (a Application) DeleteNote(ctx context.Context, userID, noteID string) error {
-	user, err := a.usersRepo.FindUser(ctx, userID)
+	user, err := a.notesRepo.FindUser(ctx, userID)
 	if err != nil {
 		return err
 	}

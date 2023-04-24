@@ -16,7 +16,7 @@ type CopyNoteResponse struct {
 }
 
 func (a Application) CopyNote(ctx context.Context, userID, noteID string) (CopyNoteResponse, error) {
-	user, err := a.usersRepo.FindUser(ctx, userID)
+	user, err := a.notesRepo.FindUser(ctx, userID)
 	if err != nil {
 		return CopyNoteResponse{}, err
 	}

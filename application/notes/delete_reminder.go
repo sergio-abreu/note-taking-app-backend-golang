@@ -5,12 +5,12 @@ import (
 )
 
 func (a Application) DeleteReminder(ctx context.Context, userID, reminderID string) error {
-	user, err := a.usersRepo.FindUser(ctx, userID)
+	user, err := a.notesRepo.FindUser(ctx, userID)
 	if err != nil {
 		return err
 	}
 
-	reminder, err := a.remindersRepo.FindReminder(ctx, userID, reminderID)
+	reminder, err := a.notesRepo.FindReminder(ctx, userID, reminderID)
 	if err != nil {
 		return err
 	}
@@ -20,7 +20,7 @@ func (a Application) DeleteReminder(ctx context.Context, userID, reminderID stri
 		return err
 	}
 
-	err = a.remindersRepo.DeleteReminder(ctx, reminder)
+	err = a.notesRepo.DeleteReminder(ctx, reminder)
 	if err != nil {
 		return err
 	}

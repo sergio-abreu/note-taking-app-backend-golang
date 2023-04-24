@@ -11,7 +11,7 @@ type MarkNoteAsInProgressResponse struct {
 }
 
 func (a Application) MarkNoteAsInProgress(ctx context.Context, userID, noteID string) (MarkNoteAsInProgressResponse, error) {
-	user, err := a.usersRepo.FindUser(ctx, userID)
+	user, err := a.notesRepo.FindUser(ctx, userID)
 	if err != nil {
 		return MarkNoteAsInProgressResponse{}, err
 	}
