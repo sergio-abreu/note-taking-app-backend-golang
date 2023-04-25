@@ -58,7 +58,7 @@ func TestApplication(t *testing.T) {
 
 func initializeApplication(t *testing.T) (
 	*gomock.Controller,
-	notes.NotesRepository,
+	notes.Repository,
 	*emailer.MockEmailer,
 	Application,
 	error,

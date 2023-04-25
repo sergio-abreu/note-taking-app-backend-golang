@@ -10,7 +10,7 @@ type MarkNoteAsInProgressResponse struct {
 	NoteID uuid.UUID `json:"note_id,omitempty"`
 }
 
-func (a Application) MarkNoteAsInProgress(ctx context.Context, userID, noteID string) (MarkNoteAsInProgressResponse, error) {
+func (a CommandApplication) MarkNoteAsInProgress(ctx context.Context, userID, noteID string) (MarkNoteAsInProgressResponse, error) {
 	user, err := a.notesRepo.FindUser(ctx, userID)
 	if err != nil {
 		return MarkNoteAsInProgressResponse{}, err

@@ -7,12 +7,12 @@ import (
 	"github.com/sergio-abreu/note-taking-app-backend-golang/domain/notes"
 )
 
-func NewApplication(notesRepo notes.NotesRepository, emailer emailer.Emailer) Application {
+func NewApplication(notesRepo notes.Repository, emailer emailer.Emailer) Application {
 	return Application{notesRepo: notesRepo, emailer: emailer}
 }
 
 type Application struct {
-	notesRepo notes.NotesRepository
+	notesRepo notes.Repository
 	emailer   emailer.Emailer
 }
 

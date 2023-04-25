@@ -35,13 +35,13 @@ func newReminder(noteID, userID uuid.UUID, cronExpression, rawEndsAt string, rep
 }
 
 type Reminder struct {
-	ID             uuid.UUID
-	NoteID         uuid.UUID
-	UserID         uuid.UUID
-	CronExpression string
-	EndsAt         time.Time
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	ID             uuid.UUID `json:"id,omitempty"`
+	NoteID         uuid.UUID `json:"note_id,omitempty"`
+	UserID         uuid.UUID `json:"user_id,omitempty"`
+	CronExpression string    `json:"cron_expression,omitempty"`
+	EndsAt         time.Time `json:"ends_at"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 func (r *Reminder) reschedule(cronExpression, rawEndsAt string, repeats uint) error {

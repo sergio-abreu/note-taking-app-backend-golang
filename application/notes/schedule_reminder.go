@@ -16,7 +16,7 @@ type ScheduleReminderResponse struct {
 	ReminderID uuid.UUID `json:"reminder_id,omitempty"`
 }
 
-func (a Application) ScheduleReminder(ctx context.Context, userID, noteID string, r ScheduleReminderRequest) (ScheduleReminderResponse, error) {
+func (a CommandApplication) ScheduleReminder(ctx context.Context, userID, noteID string, r ScheduleReminderRequest) (ScheduleReminderResponse, error) {
 	user, err := a.notesRepo.FindUser(ctx, userID)
 	if err != nil {
 		return ScheduleReminderResponse{}, err

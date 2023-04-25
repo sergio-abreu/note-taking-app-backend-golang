@@ -27,13 +27,13 @@ func newNote(title, description string, userID uuid.UUID) (Note, error) {
 }
 
 type Note struct {
-	ID          uuid.UUID
-	Title       string
-	Description string
-	Completed   bool
-	UserID      uuid.UUID
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          uuid.UUID `json:"id,omitempty"`
+	Title       string    `json:"title,omitempty"`
+	Description string    `json:"description,omitempty"`
+	Completed   bool      `json:"completed,omitempty"`
+	UserID      uuid.UUID `json:"user_id,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 func (n *Note) edit(title, description string) error {

@@ -15,7 +15,7 @@ type CreateNoteResponse struct {
 	NoteID uuid.UUID `json:"note_id,omitempty"`
 }
 
-func (a Application) CreateNote(ctx context.Context, userID string, r CreateNoteRequest) (CreateNoteResponse, error) {
+func (a CommandApplication) CreateNote(ctx context.Context, userID string, r CreateNoteRequest) (CreateNoteResponse, error) {
 	user, err := a.notesRepo.FindUser(ctx, userID)
 	if err != nil {
 		return CreateNoteResponse{}, err

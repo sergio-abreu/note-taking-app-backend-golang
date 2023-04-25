@@ -11,7 +11,7 @@ import (
 )
 
 type WebServer struct {
-	app notes.Application
+	app notes.CommandApplication
 }
 
 func main() {
@@ -27,7 +27,7 @@ func run() error {
 	}
 
 	notesRepo := repositories.NewNotesRepository(db)
-	app := notes.NewApplication(notesRepo)
+	app := notes.NewCommandApplication(notesRepo)
 	server := WebServer{app: app}
 
 	r := gin.Default()

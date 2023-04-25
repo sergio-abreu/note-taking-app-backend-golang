@@ -10,7 +10,7 @@ type MarkNoteAsCompleteResponse struct {
 	NoteID uuid.UUID `json:"note_id,omitempty"`
 }
 
-func (a Application) MarkNoteAsComplete(ctx context.Context, userID, noteID string) (MarkNoteAsCompleteResponse, error) {
+func (a CommandApplication) MarkNoteAsComplete(ctx context.Context, userID, noteID string) (MarkNoteAsCompleteResponse, error) {
 	user, err := a.notesRepo.FindUser(ctx, userID)
 	if err != nil {
 		return MarkNoteAsCompleteResponse{}, err

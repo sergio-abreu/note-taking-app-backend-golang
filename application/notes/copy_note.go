@@ -15,7 +15,7 @@ type CopyNoteResponse struct {
 	NoteID uuid.UUID `json:"note_id,omitempty"`
 }
 
-func (a Application) CopyNote(ctx context.Context, userID, noteID string) (CopyNoteResponse, error) {
+func (a CommandApplication) CopyNote(ctx context.Context, userID, noteID string) (CopyNoteResponse, error) {
 	user, err := a.notesRepo.FindUser(ctx, userID)
 	if err != nil {
 		return CopyNoteResponse{}, err

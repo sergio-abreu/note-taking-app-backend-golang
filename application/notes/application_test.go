@@ -321,17 +321,17 @@ func TestApplication(t *testing.T) {
 }
 
 func initializeApplication(_ *testing.T) (
-	notes.NotesRepository,
-	Application,
+	notes.Repository,
+	CommandApplication,
 	error,
 ) {
 	db, err := repositories.NewGormDBFromEnv()
 	if err != nil {
-		return nil, Application{}, err
+		return nil, CommandApplication{}, err
 	}
 	db = db.Debug()
 	notesRepo := repositories.NewNotesRepository(db)
-	app := NewApplication(notesRepo)
+	app := NewCommandApplication(notesRepo)
 
 	return notesRepo, app, nil
 }

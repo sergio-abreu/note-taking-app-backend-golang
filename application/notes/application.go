@@ -1,13 +1,15 @@
 package notes
 
 import (
+	"gorm.io/gorm"
+
 	"github.com/sergio-abreu/note-taking-app-backend-golang/domain/notes"
 )
 
-func NewApplication(notesRepo notes.NotesRepository) Application {
-	return Application{notesRepo: notesRepo}
+func NewCommandApplication(notesRepo notes.Repository) CommandApplication {
+	return CommandApplication{notesRepo: notesRepo}
 }
 
-type Application struct {
-	notesRepo notes.NotesRepository
+type CommandApplication struct {
+	notesRepo notes.Repository
 }

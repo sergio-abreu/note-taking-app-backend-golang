@@ -15,7 +15,7 @@ type EditNoteResponse struct {
 	NoteID uuid.UUID `json:"note_id,omitempty"`
 }
 
-func (a Application) EditNote(ctx context.Context, userID, noteID string, r EditNoteRequest) (EditNoteResponse, error) {
+func (a CommandApplication) EditNote(ctx context.Context, userID, noteID string, r EditNoteRequest) (EditNoteResponse, error) {
 	user, err := a.notesRepo.FindUser(ctx, userID)
 	if err != nil {
 		return EditNoteResponse{}, err

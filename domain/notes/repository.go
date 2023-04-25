@@ -18,7 +18,7 @@ var (
 	ErrOnlyOneReminderAllowed  = errors.New("only one reminder allowed for a note")
 )
 
-type NotesRepository interface {
+type Repository interface {
 	FindUser(ctx context.Context, userID string) (User, error)
 	CreateUser(ctx context.Context, user User) error
 

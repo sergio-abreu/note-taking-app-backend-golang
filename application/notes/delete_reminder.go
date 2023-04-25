@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-func (a Application) DeleteReminder(ctx context.Context, userID, noteID, reminderID string) error {
+func (a CommandApplication) DeleteReminder(ctx context.Context, userID, noteID, reminderID string) error {
 	user, err := a.notesRepo.FindUser(ctx, userID)
 	if err != nil {
 		return err
