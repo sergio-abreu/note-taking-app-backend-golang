@@ -5,6 +5,8 @@ import (
 	"context"
 	"crypto/tls"
 	"html/template"
+	"os"
+	"strconv"
 
 	gomail "gopkg.in/mail.v2"
 
@@ -13,6 +15,19 @@ import (
 
 func NewEMailer(host string, port int, username string, password string) EMailer {
 	return EMailer{host: host, port: port, username: username, password: password}
+}
+
+func NewEMailerFromEnv() (EMailer, error) {
+	host := os.Getenv("SMTP_HOST")
+	portStr := os.Getenv("SMTP_PORT")
+	user := os.Getenv("SMTP_EMAIL")
+	password := os.Getenv("SMTP_PASSWORD")
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		return EMailer{}, err
+	}
+
+	return NewEMailer(host, port, user, password), nil
 }
 
 type EMailer struct {

@@ -1,22 +1,33 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 
+	"github.com/sergio-abreu/note-taking-app-backend-golang/application/emailer"
+	"github.com/sergio-abreu/note-taking-app-backend-golang/infrastructure/emails"
 	"github.com/sergio-abreu/note-taking-app-backend-golang/infrastructure/messaging"
+	"github.com/sergio-abreu/note-taking-app-backend-golang/infrastructure/repositories"
 )
 
-type S struct {
-	ReminderId string `json:"reminder_id"`
-	NoteId     string `json:"note_id"`
-	UserId     string `json:"user_id"`
-}
-
 func main() {
+	db, err := repositories.NewGormDBFromEnv()
+	if err != nil {
+		log.Fatalln(err.Error())
+		return
+	}
+	db = db.Debug()
+
+	mailer, err := emails.NewEMailerFromEnv()
+	if err != nil {
+		log.Fatalln(err.Error())
+		return
+	}
+	app := emailer.NewApplication(repositories.NewNotesRepository(db), mailer)
+
 	conn, err := messaging.NewRabbitmqFromEnv()
 	if err != nil {
 		log.Fatalln(err.Error())
@@ -47,19 +58,25 @@ func main() {
 		log.Fatalln(err.Error())
 		return
 	}
+
 	for msg := range delivery {
-		var s S
-		err = json.Unmarshal(msg.Body, &s)
+		var r emailer.SendReminderEmailRequest
+		err = json.Unmarshal(msg.Body, &r)
 		if err != nil {
-			log.Fatalln(err.Error())
-			return
+			log.Println(err.Error())
+			continue
 		}
-		data, _ := json.Marshal(s)
-		fmt.Println(string(data))
+
+		err = app.SendReminderEmail(context.Background(), r)
+		if err != nil {
+			log.Println(err.Error())
+			continue
+		}
+
 		err = msg.Ack(false)
 		if err != nil {
-			log.Fatalln(err.Error())
-			return
+			log.Println(err.Error())
+			continue
 		}
 	}
 }
