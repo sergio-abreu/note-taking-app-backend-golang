@@ -1,37 +1,50 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/gin-gonic/gin"
+
+	"github.com/sergio-abreu/note-taking-app-backend-golang/application/notes"
+	"github.com/sergio-abreu/note-taking-app-backend-golang/infrastructure/repositories"
 )
 
-type S struct {
-	ReminderId string `json:"reminder_id"`
-	NoteId     string `json:"note_id"`
-	UserId     string `json:"user_id"`
+type WebServer struct {
+	app notes.Application
 }
 
 func main() {
-	r := gin.Default()
-	r.POST("/v1/webhooks/reminders/", func(c *gin.Context) {
-		var s S
-		err := c.BindJSON(&s)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
-			return
-		}
-
-		fmt.Println(s)
-
-		c.JSON(http.StatusOK, s)
-		return
-	})
-
-	if err := r.Run(":80"); err != nil {
+	if err := run(); err != nil {
 		log.Fatalln(err.Error())
 	}
+}
+
+func run() error {
+	db, err := repositories.NewGormDBFromEnv()
+	if err != nil {
+		return err
+	}
+
+	notesRepo := repositories.NewNotesRepository(db)
+	app := notes.NewApplication(notesRepo)
+	server := WebServer{app: app}
+
+	r := gin.Default()
+	g := r.Group("/api/v1/:userID/notes")
+	g.POST("/", server.CreateNote)
+	g.PATCH("/:noteID", server.EditNote)
+	g.DELETE("/:noteID", server.DeleteNote)
+	g.POST("/:noteID/copy", server.CopyNote)
+	g.PUT("/:noteID/complete", server.MarkNoteAsComplete)
+	g.PUT("/:noteID/in-progress", server.MarkNoteAsInProgress)
+	g.POST("/:noteID/reminders", server.ScheduleReminder)
+	g.PATCH("/:noteID/reminders/:reminderID", server.RescheduleReminder)
+	g.DELETE("/:noteID/reminders/:reminderID", server.DeleteReminder)
+
+	if err := r.Run(":8080"); err != nil {
+		return err
+	}
+
+	return nil
 }

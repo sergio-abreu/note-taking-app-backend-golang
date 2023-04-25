@@ -7,12 +7,12 @@ import (
 )
 
 type CreateNoteRequest struct {
-	Title       string
-	Description string
+	Title       string `json:"title,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 type CreateNoteResponse struct {
-	NoteID uuid.UUID
+	NoteID uuid.UUID `json:"note_id,omitempty"`
 }
 
 func (a Application) CreateNote(ctx context.Context, userID string, r CreateNoteRequest) (CreateNoteResponse, error) {

@@ -220,7 +220,7 @@ func TestApplication(t *testing.T) {
 		g.Expect(r).Should(gstruct.MatchAllFields(gstruct.Fields{
 			"ReminderID": Not(Equal(uuid.Nil)),
 		}))
-		reminderFromDb, err := notesRepo.FindReminder(ctx, fakeUser.ID.String(), r.ReminderID.String())
+		reminderFromDb, err := notesRepo.FindReminder(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String(), r.ReminderID.String())
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminderFromDb).Should(
@@ -271,7 +271,7 @@ func TestApplication(t *testing.T) {
 		endsAtByRepetition := time.Date(refDate.Year(), refDate.Month(), 19, 21, 28, 0, 0, refDate.Location()).
 			AddDate(0, int(repeats), 0)
 
-		r, err := app.RescheduleReminder(ctx, fakeUser.ID.String(), createReminderResponse.ReminderID.String(), RescheduleReminderRequest{
+		r, err := app.RescheduleReminder(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String(), createReminderResponse.ReminderID.String(), RescheduleReminderRequest{
 			CronExpression: cronExpression,
 			EndsAt:         "",
 			Repeats:        repeats,
@@ -282,7 +282,7 @@ func TestApplication(t *testing.T) {
 		g.Expect(r).Should(gstruct.MatchAllFields(gstruct.Fields{
 			"ReminderID": Not(Equal(uuid.Nil)),
 		}))
-		reminderFromDb, err := notesRepo.FindReminder(ctx, fakeUser.ID.String(), createReminderResponse.ReminderID.String())
+		reminderFromDb, err := notesRepo.FindReminder(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String(), createReminderResponse.ReminderID.String())
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminderFromDb).Should(
@@ -310,11 +310,11 @@ func TestApplication(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 
-		err = app.DeleteReminder(ctx, fakeUser.ID.String(), createReminderResponse.ReminderID.String())
+		err = app.DeleteReminder(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String(), createReminderResponse.ReminderID.String())
 
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
-		_, err = notesRepo.FindReminder(ctx, fakeUser.ID.String(), createReminderResponse.ReminderID.String())
+		_, err = notesRepo.FindReminder(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String(), createReminderResponse.ReminderID.String())
 		g.Expect(err).Should(
 			MatchError(notes.ErrReminderNotFound))
 	})

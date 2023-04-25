@@ -7,7 +7,7 @@ import (
 )
 
 type MarkNoteAsInProgressResponse struct {
-	NoteID uuid.UUID
+	NoteID uuid.UUID `json:"note_id,omitempty"`
 }
 
 func (a Application) MarkNoteAsInProgress(ctx context.Context, userID, noteID string) (MarkNoteAsInProgressResponse, error) {

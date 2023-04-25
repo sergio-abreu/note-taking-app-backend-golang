@@ -7,22 +7,22 @@ import (
 )
 
 type RescheduleReminderRequest struct {
-	CronExpression string
-	EndsAt         string
-	Repeats        uint
+	CronExpression string `json:"cron_expression,omitempty"`
+	EndsAt         string `json:"ends_at,omitempty"`
+	Repeats        uint   `json:"repeats,omitempty"`
 }
 
 type RescheduleReminderResponse struct {
-	ReminderID uuid.UUID
+	ReminderID uuid.UUID `json:"reminder_id,omitempty"`
 }
 
-func (a Application) RescheduleReminder(ctx context.Context, userID, reminderID string, r RescheduleReminderRequest) (RescheduleReminderResponse, error) {
+func (a Application) RescheduleReminder(ctx context.Context, userID, noteID, reminderID string, r RescheduleReminderRequest) (RescheduleReminderResponse, error) {
 	user, err := a.notesRepo.FindUser(ctx, userID)
 	if err != nil {
 		return RescheduleReminderResponse{}, err
 	}
 
-	reminder, err := a.notesRepo.FindReminder(ctx, userID, reminderID)
+	reminder, err := a.notesRepo.FindReminder(ctx, userID, noteID, reminderID)
 	if err != nil {
 		return RescheduleReminderResponse{}, err
 	}

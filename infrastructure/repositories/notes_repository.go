@@ -175,8 +175,12 @@ func (n NotesRepository) MarkAsInProgress(ctx context.Context, note notes.Note) 
 	return nil
 }
 
-func (n NotesRepository) FindReminder(ctx context.Context, rawUserID, rawReminderID string) (notes.Reminder, error) {
+func (n NotesRepository) FindReminder(ctx context.Context, rawUserID, rawNoteID, rawReminderID string) (notes.Reminder, error) {
 	userID, err := parseUserID(rawUserID)
+	if err != nil {
+		return notes.Reminder{}, err
+	}
+	noteID, err := parseNoteID(rawNoteID)
 	if err != nil {
 		return notes.Reminder{}, err
 	}
@@ -188,7 +192,7 @@ func (n NotesRepository) FindReminder(ctx context.Context, rawUserID, rawReminde
 	var reminder notes.Reminder
 	err = n.db.WithContext(ctx).
 		Table("reminders").
-		First(&reminder, "user_id = ? AND id = ?", userID, reminderID).Error
+		First(&reminder, "user_id = ? AND note_id = ? AND id = ?", userID, noteID, reminderID).Error
 	if err == gorm.ErrRecordNotFound {
 		return notes.Reminder{}, notes.ErrReminderNotFound
 	}

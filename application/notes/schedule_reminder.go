@@ -7,13 +7,13 @@ import (
 )
 
 type ScheduleReminderRequest struct {
-	CronExpression string
-	EndsAt         string
-	Repeats        uint
+	CronExpression string `json:"cron_expression,omitempty"`
+	EndsAt         string `json:"ends_at,omitempty"`
+	Repeats        uint   `json:"repeats,omitempty"`
 }
 
 type ScheduleReminderResponse struct {
-	ReminderID uuid.UUID
+	ReminderID uuid.UUID `json:"reminder_id,omitempty"`
 }
 
 func (a Application) ScheduleReminder(ctx context.Context, userID, noteID string, r ScheduleReminderRequest) (ScheduleReminderResponse, error) {

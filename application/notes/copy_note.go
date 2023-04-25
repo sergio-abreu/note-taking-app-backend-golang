@@ -7,12 +7,12 @@ import (
 )
 
 type CopyNoteRequest struct {
-	Title       string
-	Description string
+	Title       string `json:"title,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 type CopyNoteResponse struct {
-	NoteID uuid.UUID
+	NoteID uuid.UUID `json:"note_id,omitempty"`
 }
 
 func (a Application) CopyNote(ctx context.Context, userID, noteID string) (CopyNoteResponse, error) {

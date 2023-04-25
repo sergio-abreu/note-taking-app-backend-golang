@@ -7,7 +7,7 @@ import (
 )
 
 type MarkNoteAsCompleteResponse struct {
-	NoteID uuid.UUID
+	NoteID uuid.UUID `json:"note_id,omitempty"`
 }
 
 func (a Application) MarkNoteAsComplete(ctx context.Context, userID, noteID string) (MarkNoteAsCompleteResponse, error) {
