@@ -7,7 +7,7 @@ import (
 )
 
 func (w WebServer) CopyNote(c *gin.Context) {
-	response, err := w.app.CopyNote(c.Request.Context(), c.Param("userID"), c.Param("noteID"))
+	response, err := w.command.CopyNote(c.Request.Context(), c.Param("userID"), c.Param("noteID"))
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 		return

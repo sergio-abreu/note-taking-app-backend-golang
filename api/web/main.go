@@ -11,7 +11,8 @@ import (
 )
 
 type WebServer struct {
-	app notes.CommandApplication
+	command notes.CommandApplication
+	query   notes.QueryApplication
 }
 
 func main() {
@@ -26,12 +27,15 @@ func run() error {
 		return err
 	}
 
+	db = db.Debug()
 	notesRepo := repositories.NewNotesRepository(db)
-	app := notes.NewCommandApplication(notesRepo)
-	server := WebServer{app: app}
+	command := notes.NewCommandApplication(notesRepo)
+	query := notes.NewQueryApplication(db)
+	server := WebServer{command: command, query: query}
 
 	r := gin.Default()
 	g := r.Group("/api/v1/:userID/notes")
+	g.GET("/", server.GetNotes)
 	g.POST("/", server.CreateNote)
 	g.PATCH("/:noteID", server.EditNote)
 	g.DELETE("/:noteID", server.DeleteNote)

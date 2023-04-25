@@ -7,7 +7,7 @@ import (
 )
 
 func (w WebServer) DeleteReminder(c *gin.Context) {
-	err := w.app.DeleteReminder(c.Request.Context(), c.Param("userID"), c.Param("noteID"), c.Param("reminderID"))
+	err := w.command.DeleteReminder(c.Request.Context(), c.Param("userID"), c.Param("noteID"), c.Param("reminderID"))
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 		return

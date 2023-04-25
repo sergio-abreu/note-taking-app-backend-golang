@@ -16,7 +16,7 @@ func (w WebServer) CreateNote(c *gin.Context) {
 		return
 	}
 
-	response, err := w.app.CreateNote(c.Request.Context(), c.Param("userID"), r)
+	response, err := w.command.CreateNote(c.Request.Context(), c.Param("userID"), r)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 		return

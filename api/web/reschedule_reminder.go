@@ -16,7 +16,7 @@ func (w WebServer) RescheduleReminder(c *gin.Context) {
 		return
 	}
 
-	response, err := w.app.RescheduleReminder(c.Request.Context(), c.Param("userID"), c.Param("noteID"), c.Param("reminderID"), r)
+	response, err := w.command.RescheduleReminder(c.Request.Context(), c.Param("userID"), c.Param("noteID"), c.Param("reminderID"), r)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 		return

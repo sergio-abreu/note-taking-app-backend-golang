@@ -13,3 +13,11 @@ func NewCommandApplication(notesRepo notes.Repository) CommandApplication {
 type CommandApplication struct {
 	notesRepo notes.Repository
 }
+
+func NewQueryApplication(db *gorm.DB) QueryApplication {
+	return QueryApplication{db: db}
+}
+
+type QueryApplication struct {
+	db *gorm.DB
+}

@@ -7,6 +7,46 @@
 	},
 	"item": [
 		{
+			"name": "Get notes",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/v1/{{userID}}/notes",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"{{userID}}",
+						"notes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Create note",
 			"event": [
 				{
@@ -51,6 +91,56 @@
 						"{{userID}}",
 						"notes",
 						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Edit note",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"title\": \"Lembrar de cortar o cabelo\",\n    \"description\": \"Marcar na Graciele\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/v1/{{userID}}/notes/{{noteID}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"{{userID}}",
+						"notes",
+						"{{noteID}}"
 					]
 				}
 			},
@@ -177,56 +267,6 @@
 						"notes",
 						"{{noteID}}",
 						"in-progress"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Edit note",
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							""
-						],
-						"type": "text/javascript"
-					}
-				},
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							""
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "PATCH",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"title\": \"Lembrar de cortar o cabelo\",\n    \"description\": \"Marcar na Graciele\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{baseUrl}}/api/v1/{{userID}}/notes/{{noteID}}",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"api",
-						"v1",
-						"{{userID}}",
-						"notes",
-						"{{noteID}}"
 					]
 				}
 			},
