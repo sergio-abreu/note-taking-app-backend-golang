@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	_ "github.com/gin-gonic/gin"
 
 	"github.com/sergio-abreu/note-taking-app-backend-golang/application/notes"
 	"github.com/sergio-abreu/note-taking-app-backend-golang/infrastructure/repositories"
@@ -34,6 +34,7 @@ func run() error {
 	server := WebServer{command: command, query: query}
 
 	r := gin.Default()
+	r.Use(cors.Default())
 	g := r.Group("/api/v1/:userID/notes")
 	g.GET("/", server.GetNotes)
 	g.POST("/", server.CreateNote)
