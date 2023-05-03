@@ -37,6 +37,7 @@ func run() error {
 	r.Use(cors.Default())
 	g := r.Group("/api/v1/:userID/notes")
 	g.GET("/", server.GetNotes)
+	g.GET("/completed", server.GetCompletedNotes)
 	g.POST("/", server.CreateNote)
 	g.PATCH("/:noteID", server.EditNote)
 	g.DELETE("/:noteID", server.DeleteNote)
