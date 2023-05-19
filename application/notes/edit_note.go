@@ -2,17 +2,20 @@ package notes
 
 import (
 	"context"
+	"time"
 
 	"github.com/gofrs/uuid"
 )
 
 type EditNoteRequest struct {
-	Title       string `json:"title,omitempty"`
-	Description string `json:"description,omitempty"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
 }
 
 type EditNoteResponse struct {
-	NoteID uuid.UUID `json:"note_id,omitempty"`
+	NoteID    uuid.UUID `json:"note_id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 func (a CommandApplication) EditNote(ctx context.Context, userID, noteID string, r EditNoteRequest) (EditNoteResponse, error) {
@@ -37,6 +40,8 @@ func (a CommandApplication) EditNote(ctx context.Context, userID, noteID string,
 	}
 
 	return EditNoteResponse{
-		NoteID: note.ID,
+		NoteID:    note.ID,
+		CreatedAt: note.CreatedAt,
+		UpdatedAt: note.UpdatedAt,
 	}, nil
 }

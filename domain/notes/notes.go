@@ -17,12 +17,14 @@ func newNote(title, description string, userID uuid.UUID) (Note, error) {
 	if len(title) == 0 {
 		return Note{}, ErrEmptyTitle
 	}
+	now := time.Now()
 	return Note{
 		ID:          uuid.Must(uuid.NewV4()),
 		Title:       title,
 		Description: description,
 		UserID:      userID,
-		CreatedAt:   time.Now(),
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}, nil
 }
 
@@ -65,11 +67,13 @@ func (n *Note) markAsInProgress() error {
 }
 
 func (n *Note) copy() Note {
+	now := time.Now()
 	return Note{
 		ID:          uuid.Must(uuid.NewV4()),
 		Title:       n.Title,
 		Description: n.Description,
 		UserID:      n.UserID,
-		CreatedAt:   time.Now(),
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
 }

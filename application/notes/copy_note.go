@@ -2,17 +2,20 @@ package notes
 
 import (
 	"context"
+	"time"
 
 	"github.com/gofrs/uuid"
 )
 
 type CopyNoteRequest struct {
-	Title       string `json:"title,omitempty"`
-	Description string `json:"description,omitempty"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
 }
 
 type CopyNoteResponse struct {
-	NoteID uuid.UUID `json:"note_id,omitempty"`
+	NoteID    uuid.UUID `json:"note_id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 func (a CommandApplication) CopyNote(ctx context.Context, userID, noteID string) (CopyNoteResponse, error) {
@@ -37,6 +40,8 @@ func (a CommandApplication) CopyNote(ctx context.Context, userID, noteID string)
 	}
 
 	return CopyNoteResponse{
-		NoteID: newNote.ID,
+		NoteID:    newNote.ID,
+		CreatedAt: newNote.CreatedAt,
+		UpdatedAt: newNote.UpdatedAt,
 	}, nil
 }

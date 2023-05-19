@@ -2,12 +2,15 @@ package notes
 
 import (
 	"context"
+	"time"
 
 	"github.com/gofrs/uuid"
 )
 
 type MarkNoteAsCompleteResponse struct {
-	NoteID uuid.UUID `json:"note_id,omitempty"`
+	NoteID    uuid.UUID `json:"note_id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 func (a CommandApplication) MarkNoteAsComplete(ctx context.Context, userID, noteID string) (MarkNoteAsCompleteResponse, error) {
@@ -32,6 +35,8 @@ func (a CommandApplication) MarkNoteAsComplete(ctx context.Context, userID, note
 	}
 
 	return MarkNoteAsCompleteResponse{
-		NoteID: note.ID,
+		NoteID:    note.ID,
+		CreatedAt: note.CreatedAt,
+		UpdatedAt: note.UpdatedAt,
 	}, nil
 }

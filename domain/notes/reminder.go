@@ -24,13 +24,15 @@ func newReminder(noteID, userID uuid.UUID, cronExpression, rawEndsAt string, rep
 	if err != nil {
 		return Reminder{}, err
 	}
+	now := time.Now()
 	return Reminder{
 		ID:             uuid.Must(uuid.NewV4()),
 		NoteID:         noteID,
 		UserID:         userID,
 		CronExpression: cronExpression,
 		EndsAt:         endsAt,
-		CreatedAt:      time.Now(),
+		CreatedAt:      now,
+		UpdatedAt:      now,
 	}, nil
 }
 

@@ -20,7 +20,7 @@ func TestNote_CreateNote(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(note).Should(
-			BeANote(t, title, description, false, user.ID, time.Now(), time.Time{}))
+			BeANote(t, title, description, false, user.ID, time.Now(), time.Now()))
 	})
 
 	t.Run("Don't create note when title is empty", func(t *testing.T) {
@@ -199,7 +199,7 @@ func TestNote_CopyNote(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(note2).Should(
-			BeANote(t, title, description, false, user.ID, time.Now(), time.Time{}))
+			BeANote(t, title, description, false, user.ID, time.Now(), time.Now()))
 	})
 
 	t.Run("Copy a completed note successfully", func(t *testing.T) {
@@ -218,7 +218,7 @@ func TestNote_CopyNote(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(note2).Should(
-			BeANote(t, title, description, false, user.ID, time.Now(), time.Time{}))
+			BeANote(t, title, description, false, user.ID, time.Now(), time.Now()))
 	})
 
 	t.Run("Don't copy a note when it doesn't belong to this user", func(t *testing.T) {
@@ -251,7 +251,7 @@ func TestNote_DeleteNote(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(note).Should(
-			BeANote(t, title, description, false, user.ID, time.Now(), time.Time{}))
+			BeANote(t, title, description, false, user.ID, time.Now(), time.Now()))
 	})
 
 	t.Run("Don't delete note when it doesn't belong to this user", func(t *testing.T) {
@@ -284,7 +284,7 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminder).Should(
-			BeAReminder(t, note.ID, user.ID, cronExpression, time.Time{}, time.Now(), time.Time{}))
+			BeAReminder(t, note.ID, user.ID, cronExpression, time.Time{}, time.Now(), time.Now()))
 	})
 
 	t.Run("Schedule a reminder to repeat 3 times successfully", func(t *testing.T) {
@@ -303,7 +303,7 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminder).Should(
-			BeAReminder(t, note.ID, user.ID, cronExpression, endsAtByRepetition, time.Now(), time.Time{}))
+			BeAReminder(t, note.ID, user.ID, cronExpression, endsAtByRepetition, time.Now(), time.Now()))
 	})
 
 	t.Run("Schedule a reminder to repeat until certain date successfully", func(t *testing.T) {
@@ -320,7 +320,7 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminder).Should(
-			BeAReminder(t, note.ID, user.ID, cronExpression, endsAt, time.Now(), time.Time{}))
+			BeAReminder(t, note.ID, user.ID, cronExpression, endsAt, time.Now(), time.Now()))
 	})
 
 	t.Run("Don't create a reminder when endsAt date format is invalid", func(t *testing.T) {

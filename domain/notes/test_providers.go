@@ -59,6 +59,7 @@ func FakeUser(_ *testing.T) User {
 		Name:      fakeUser.FirstName,
 		Email:     fakeUser.Contact.Email,
 		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 }
 

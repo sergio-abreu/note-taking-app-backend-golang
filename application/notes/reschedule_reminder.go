@@ -2,18 +2,21 @@ package notes
 
 import (
 	"context"
+	"time"
 
 	"github.com/gofrs/uuid"
 )
 
 type RescheduleReminderRequest struct {
-	CronExpression string `json:"cron_expression,omitempty"`
-	EndsAt         string `json:"ends_at,omitempty"`
-	Repeats        uint   `json:"repeats,omitempty"`
+	CronExpression string `json:"cron_expression"`
+	EndsAt         string `json:"ends_at"`
+	Repeats        uint   `json:"repeats"`
 }
 
 type RescheduleReminderResponse struct {
-	ReminderID uuid.UUID `json:"reminder_id,omitempty"`
+	ReminderID uuid.UUID `json:"reminder_id"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 func (a CommandApplication) RescheduleReminder(ctx context.Context, userID, noteID, reminderID string, r RescheduleReminderRequest) (RescheduleReminderResponse, error) {
@@ -39,5 +42,7 @@ func (a CommandApplication) RescheduleReminder(ctx context.Context, userID, note
 
 	return RescheduleReminderResponse{
 		ReminderID: reminder.ID,
+		CreatedAt:  reminder.CreatedAt,
+		UpdatedAt:  reminder.UpdatedAt,
 	}, nil
 }

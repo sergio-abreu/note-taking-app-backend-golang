@@ -2,17 +2,20 @@ package notes
 
 import (
 	"context"
+	"time"
 
 	"github.com/gofrs/uuid"
 )
 
 type CreateNoteRequest struct {
-	Title       string `json:"title,omitempty"`
-	Description string `json:"description,omitempty"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
 }
 
 type CreateNoteResponse struct {
-	NoteID uuid.UUID `json:"note_id,omitempty"`
+	NoteID    uuid.UUID `json:"note_id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 func (a CommandApplication) CreateNote(ctx context.Context, userID string, r CreateNoteRequest) (CreateNoteResponse, error) {
@@ -32,6 +35,8 @@ func (a CommandApplication) CreateNote(ctx context.Context, userID string, r Cre
 	}
 
 	return CreateNoteResponse{
-		NoteID: note.ID,
+		NoteID:    note.ID,
+		CreatedAt: note.CreatedAt,
+		UpdatedAt: note.UpdatedAt,
 	}, nil
 }

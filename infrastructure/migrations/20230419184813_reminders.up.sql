@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS reminders
     cron_expression VARCHAR     NOT NULL,
     ends_at         TIMESTAMPTZ NULL,
     created_at      TIMESTAMPTZ NOT NULL,
-    updated_at      TIMESTAMPTZ NULL,
+    updated_at      TIMESTAMPTZ NOT NULL,
     FOREIGN KEY (note_id) REFERENCES notes (id),
     FOREIGN KEY (user_id) REFERENCES users (id)
 );

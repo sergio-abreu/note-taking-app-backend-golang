@@ -17,6 +17,7 @@ func (q QueryApplication) GetNotes(ctx context.Context, userID string) ([]Note, 
 		Table("notes n").
 		Preload("Reminder").
 		Where("n.user_id = ? AND n.completed = false", userID).
+		Order("created_at DESC").
 		Find(&noteList).Error
 	return noteList, err
 }

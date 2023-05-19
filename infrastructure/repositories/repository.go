@@ -44,8 +44,7 @@ func (n NotesRepository) FindUser(ctx context.Context, userID string) (notes.Use
 func (n NotesRepository) CreateUser(ctx context.Context, user notes.User) error {
 	err := n.db.WithContext(ctx).
 		Table("users").
-		Select("id", "name", "email", "created_at").
-		Omit("updated_at").
+		Select("id", "name", "email", "created_at", "updated_at").
 		Create(&user).Error
 	if err != nil {
 		return err
@@ -81,8 +80,7 @@ func (n NotesRepository) FindNote(ctx context.Context, rawUserID, rawNoteID stri
 func (n NotesRepository) CreateNote(ctx context.Context, note notes.Note) error {
 	err := n.db.WithContext(ctx).
 		Table("notes").
-		Select("id", "title", "description", "user_id", "created_at").
-		Omit("updated_at").
+		Select("id", "title", "description", "user_id", "created_at", "updated_at").
 		Create(&note).Error
 	if err != nil {
 		return err
@@ -205,14 +203,13 @@ func (n NotesRepository) FindReminder(ctx context.Context, rawUserID, rawNoteID,
 
 func (n NotesRepository) ScheduleReminder(ctx context.Context, reminder notes.Reminder) error {
 	return n.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		fields := []string{"id", "note_id", "user_id", "cron_expression", "created_at"}
+		fields := []string{"id", "note_id", "user_id", "cron_expression", "created_at", "updated_at"}
 		if !reminder.EndsAt.IsZero() {
 			fields = append(fields, "ends_at")
 		}
 		err := tx.WithContext(ctx).
 			Table("reminders").
 			Select(fields).
-			Omit("updated_at").
 			Create(&reminder).Error
 		if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.ConstraintName == "unique_notes_idx" {
 			return notes.ErrOnlyOneReminderAllowed

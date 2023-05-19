@@ -2,12 +2,15 @@ package notes
 
 import (
 	"context"
+	"time"
 
 	"github.com/gofrs/uuid"
 )
 
 type MarkNoteAsInProgressResponse struct {
-	NoteID uuid.UUID `json:"note_id,omitempty"`
+	NoteID    uuid.UUID `json:"note_id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 func (a CommandApplication) MarkNoteAsInProgress(ctx context.Context, userID, noteID string) (MarkNoteAsInProgressResponse, error) {
@@ -32,6 +35,8 @@ func (a CommandApplication) MarkNoteAsInProgress(ctx context.Context, userID, no
 	}
 
 	return MarkNoteAsInProgressResponse{
-		NoteID: note.ID,
+		NoteID:    note.ID,
+		CreatedAt: note.CreatedAt,
+		UpdatedAt: note.UpdatedAt,
 	}, nil
 }

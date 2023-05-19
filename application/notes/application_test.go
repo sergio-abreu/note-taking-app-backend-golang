@@ -2,6 +2,7 @@ package notes
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -38,13 +39,15 @@ func TestApplication(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(r).Should(gstruct.MatchAllFields(gstruct.Fields{
-			"NoteID": Not(Equal(uuid.Nil)),
+			"NoteID":    Not(Equal(uuid.Nil)),
+			"CreatedAt": BeTemporally("~", time.Now(), time.Second),
+			"UpdatedAt": BeTemporally("~", time.Now(), time.Second),
 		}))
 		noteFromDB, err := notesRepo.FindNote(ctx, fakeUser.ID.String(), r.NoteID.String())
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(noteFromDB).Should(
-			notes.BeANote(t, title, description, false, fakeUser.ID, time.Now(), time.Time{}))
+			notes.BeANote(t, title, description, false, fakeUser.ID, time.Now(), time.Now()))
 	})
 
 	t.Run("Edit a note successfully", func(t *testing.T) {
@@ -71,7 +74,9 @@ func TestApplication(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(r).Should(gstruct.MatchAllFields(gstruct.Fields{
-			"NoteID": Equal(r.NoteID),
+			"NoteID":    Equal(r.NoteID),
+			"CreatedAt": BeTemporally("~", time.Now(), time.Second),
+			"UpdatedAt": BeTemporally("~", time.Now(), time.Second),
 		}))
 		noteFromDB, err := notesRepo.FindNote(ctx, fakeUser.ID.String(), r.NoteID.String())
 		g.Expect(err).Should(
@@ -101,7 +106,9 @@ func TestApplication(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(r).Should(gstruct.MatchAllFields(gstruct.Fields{
-			"NoteID": Equal(r.NoteID),
+			"NoteID":    Equal(r.NoteID),
+			"CreatedAt": BeTemporally("~", time.Now(), time.Second),
+			"UpdatedAt": BeTemporally("~", time.Now(), time.Second),
 		}))
 		noteFromDB, err := notesRepo.FindNote(ctx, fakeUser.ID.String(), r.NoteID.String())
 		g.Expect(err).Should(
@@ -134,7 +141,9 @@ func TestApplication(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(r).Should(gstruct.MatchAllFields(gstruct.Fields{
-			"NoteID": Equal(r.NoteID),
+			"NoteID":    Equal(r.NoteID),
+			"CreatedAt": BeTemporally("~", time.Now(), time.Second),
+			"UpdatedAt": BeTemporally("~", time.Now(), time.Second),
 		}))
 		noteFromDB, err := notesRepo.FindNote(ctx, fakeUser.ID.String(), r.NoteID.String())
 		g.Expect(err).Should(
@@ -162,13 +171,15 @@ func TestApplication(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(r).Should(gstruct.MatchAllFields(gstruct.Fields{
-			"NoteID": Not(Equal(uuid.Nil)),
+			"NoteID":    Not(Equal(uuid.Nil)),
+			"CreatedAt": BeTemporally("~", time.Now(), time.Second),
+			"UpdatedAt": BeTemporally("~", time.Now(), time.Second),
 		}))
 		noteFromDB, err := notesRepo.FindNote(ctx, fakeUser.ID.String(), r.NoteID.String())
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(noteFromDB).Should(
-			notes.BeANote(t, title, description, false, fakeUser.ID, time.Now(), time.Time{}))
+			notes.BeANote(t, title, description, false, fakeUser.ID, time.Now(), time.Now()))
 	})
 
 	t.Run("Delete a note successfully", func(t *testing.T) {
@@ -219,12 +230,14 @@ func TestApplication(t *testing.T) {
 			Not(HaveOccurred()))
 		g.Expect(r).Should(gstruct.MatchAllFields(gstruct.Fields{
 			"ReminderID": Not(Equal(uuid.Nil)),
+			"CreatedAt":  BeTemporally("~", time.Now(), time.Second),
+			"UpdatedAt":  BeTemporally("~", time.Now(), time.Second),
 		}))
 		reminderFromDb, err := notesRepo.FindReminder(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String(), r.ReminderID.String())
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminderFromDb).Should(
-			notes.BeAReminder(t, createNoteResponse.NoteID, fakeUser.ID, cronExpression, time.Time{}, time.Now(), time.Time{}))
+			notes.BeAReminder(t, createNoteResponse.NoteID, fakeUser.ID, cronExpression, time.Time{}, time.Now(), time.Now()))
 
 		t.Run("Cannot schedule more than one reminder to the same note", func(t *testing.T) {
 			_, err = app.ScheduleReminder(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String(), ScheduleReminderRequest{
@@ -265,10 +278,10 @@ func TestApplication(t *testing.T) {
 		})
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
-		cronExpression := "28 21 19 * *"
 		repeats := uint(5)
-		refDate := time.Now()
-		endsAtByRepetition := time.Date(refDate.Year(), refDate.Month(), 19, 21, 28, 0, 0, refDate.Location()).
+		refDate := time.Now().AddDate(0, 0, -1)
+		cronExpression := fmt.Sprintf("28 21 %d * *", refDate.Day())
+		endsAtByRepetition := time.Date(refDate.Year(), refDate.Month(), refDate.Day(), 21, 28, 0, 0, refDate.Location()).
 			AddDate(0, int(repeats), 0)
 
 		r, err := app.RescheduleReminder(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String(), createReminderResponse.ReminderID.String(), RescheduleReminderRequest{
@@ -281,6 +294,8 @@ func TestApplication(t *testing.T) {
 			Not(HaveOccurred()))
 		g.Expect(r).Should(gstruct.MatchAllFields(gstruct.Fields{
 			"ReminderID": Not(Equal(uuid.Nil)),
+			"CreatedAt":  BeTemporally("~", time.Now(), time.Second),
+			"UpdatedAt":  BeTemporally("~", time.Now(), time.Second),
 		}))
 		reminderFromDb, err := notesRepo.FindReminder(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String(), createReminderResponse.ReminderID.String())
 		g.Expect(err).Should(

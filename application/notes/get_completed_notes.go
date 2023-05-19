@@ -10,6 +10,7 @@ func (q QueryApplication) GetCompletedNotes(ctx context.Context, userID string) 
 		Table("notes n").
 		Preload("Reminder").
 		Where("n.user_id = ? AND n.completed = true", userID).
+		Order("created_at DESC").
 		Find(&noteList).Error
 	return noteList, err
 }
