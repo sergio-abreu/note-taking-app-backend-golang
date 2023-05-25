@@ -89,7 +89,7 @@ type Reminder struct {
 	StartDate  time.Time `json:"start_date"`
 	StartTime  string    `json:"start_time"`
 	Timezone   string    `json:"timezone"`
-	Interval   Interval  `json:"every"`
+	Interval   Interval  `json:"interval"`
 	WeekDays   string    `json:"week_days"`
 	EndsAfterN uint      `json:"ends_after_n"`
 	EndsAt     time.Time `json:"ends_at"`
@@ -163,7 +163,7 @@ func (r *Reminder) ParseCron() string {
 		day = strconv.Itoa(startDate.Day())
 		month = strconv.Itoa(int(startDate.Month()))
 	}
-	return fmt.Sprintf("%d %d %s %s %s", minutes, hour, day, month, week)
+	return fmt.Sprintf("%d %d %s %s %s", startDate.Minute(), startDate.Hour(), day, month, week)
 }
 
 func (r *Reminder) ParseEndsAt(cronExpression string) string {

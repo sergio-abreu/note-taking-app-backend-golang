@@ -275,7 +275,11 @@ func (n NotesRepository) scheduleCron(ctx context.Context, reminder notes.Remind
 
 func (n NotesRepository) unscheduleCron(ctx context.Context, reminderID uuid.UUID) error {
 	sql := "SELECT cron.unschedule(?);"
-	return n.db.WithContext(ctx).Exec(sql, reminderID).Error
+	err := n.db.WithContext(ctx).Exec(sql, reminderID).Error
+	if pgErr, ok := err.(*pgconn.PgError); ok && strings.Contains(pgErr.Message, "could not find valid entry for job") {
+		return nil
+	}
+	return err
 }
 
 func parseUserID(userID string) (uuid.UUID, error) {
