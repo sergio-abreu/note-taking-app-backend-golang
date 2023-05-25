@@ -59,18 +59,36 @@ func (u User) DeleteNote(note Note) error {
 	return nil
 }
 
-func (u User) ScheduleAReminder(note Note, cronExpression, rawEndsAt string, repeats uint) (Reminder, error) {
+func (u User) ScheduleAReminder(
+	note Note,
+	startDate string,
+	startTime string,
+	timezone string,
+	interval string,
+	weekDays string,
+	endsAt string,
+	endsAfterN uint,
+) (Reminder, error) {
 	if err := u.validateNoteBelongsToUser(&note); err != nil {
 		return Reminder{}, err
 	}
-	return newReminder(note.ID, u.ID, cronExpression, rawEndsAt, repeats)
+	return newReminder(note.ID, u.ID, startDate, startTime, timezone, interval, weekDays, endsAt, endsAfterN)
 }
 
-func (u User) RescheduleAReminder(reminder *Reminder, cronExpression, rawEndsAt string, repeats uint) error {
+func (u User) RescheduleAReminder(
+	reminder *Reminder,
+	startDate string,
+	startTime string,
+	timezone string,
+	interval string,
+	weekDays string,
+	endsAt string,
+	endsAfterN uint,
+) error {
 	if err := u.validateReminderBelongsToUser(reminder); err != nil {
 		return err
 	}
-	return reminder.reschedule(cronExpression, rawEndsAt, repeats)
+	return reminder.reschedule(startDate, startTime, timezone, interval, weekDays, endsAt, endsAfterN)
 }
 
 func (u User) DeleteReminder(reminder Reminder) error {

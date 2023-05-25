@@ -1,12 +1,11 @@
-CREATE OR REPLACE FUNCTION publish_reminder (_reminder_id uuid) RETURNS text AS $$
+CREATE OR REPLACE FUNCTION publish_reminder (_reminder_id uuid, _date timestamptz) RETURNS text AS $$
 DECLARE
     _note_id uuid;
     _user_id uuid;
-    _date timestamptz;
     _response text;
     _status int;
 BEGIN
-    SELECT ends_at, note_id, user_id into _date, _note_id, _user_id FROM reminders WHERE id = _reminder_id;
+    SELECT note_id, user_id into _note_id, _user_id FROM reminders WHERE id = _reminder_id;
     IF _note_id IS NULL THEN
         RAISE EXCEPTION 'reminder not found';
     END IF;
@@ -21,7 +20,7 @@ BEGIN
         END IF;
         RETURN 'published: ' || _response;
     ELSE
-        SELECT cron.unschedule(_reminder_id::text);
+        PERFORM cron.unschedule(_reminder_id::text);
         RETURN 'unscheduled';
     END IF;
 END; $$ LANGUAGE plpgsql;

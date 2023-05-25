@@ -34,7 +34,7 @@ func TestApplication(t *testing.T) {
 		err = notesRepo.CreateNote(ctx, note)
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
-		reminder, err := user.ScheduleAReminder(note, "0 0 1 * *", "", 0)
+		reminder, err := user.ScheduleAReminder(note, "2023-05-24", "10:02", "UTC", "Monthly", "", "", 0)
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		err = notesRepo.ScheduleReminder(ctx, reminder)

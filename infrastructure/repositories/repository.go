@@ -203,9 +203,12 @@ func (n NotesRepository) FindReminder(ctx context.Context, rawUserID, rawNoteID,
 
 func (n NotesRepository) ScheduleReminder(ctx context.Context, reminder notes.Reminder) error {
 	return n.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		fields := []string{"id", "note_id", "user_id", "cron_expression", "created_at", "updated_at"}
+		fields := []string{"id", "note_id", "user_id", "start_date", "start_time", "timezone", "interval", "ends_after_n", "created_at", "updated_at"}
 		if !reminder.EndsAt.IsZero() {
 			fields = append(fields, "ends_at")
+		}
+		if reminder.Interval == notes.Weekly && len(reminder.WeekDays) != 0 {
+			fields = append(fields, "week_days")
 		}
 		err := tx.WithContext(ctx).
 			Table("reminders").
@@ -224,9 +227,12 @@ func (n NotesRepository) ScheduleReminder(ctx context.Context, reminder notes.Re
 
 func (n NotesRepository) RescheduleReminder(ctx context.Context, reminder notes.Reminder) error {
 	return n.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		fields := []string{"cron_expression", "updated_at"}
+		fields := []string{"start_date", "start_time", "timezone", "interval", "ends_after_n", "updated_at"}
 		if !reminder.EndsAt.IsZero() {
 			fields = append(fields, "ends_at")
+		}
+		if reminder.Interval == notes.Weekly && len(reminder.WeekDays) != 0 {
+			fields = append(fields, "week_days")
 		}
 		err := tx.WithContext(ctx).
 			Table("reminders").
@@ -256,8 +262,15 @@ func (n NotesRepository) DeleteReminder(ctx context.Context, reminder notes.Remi
 }
 
 func (n NotesRepository) scheduleCron(ctx context.Context, reminder notes.Reminder) error {
-	sql := fmt.Sprintf("SELECT cron.schedule(?, ?, $$ SELECT publish_reminder('%s'); $$);", reminder.ID)
-	return n.db.WithContext(ctx).Exec(sql, reminder.ID, reminder.CronExpression).Error
+	cronExpression := reminder.ParseCron()
+	endsAt := reminder.ParseEndsAt(cronExpression)
+	if len(endsAt) == 0 {
+		endsAt = "NULL"
+	} else {
+		endsAt = "'" + endsAt + "'"
+	}
+	sql := fmt.Sprintf("SELECT cron.schedule(?, ?, $$ SELECT publish_reminder('%s', %s); $$);", reminder.ID, endsAt)
+	return n.db.WithContext(ctx).Exec(sql, reminder.ID, cronExpression).Error
 }
 
 func (n NotesRepository) unscheduleCron(ctx context.Context, reminderID uuid.UUID) error {

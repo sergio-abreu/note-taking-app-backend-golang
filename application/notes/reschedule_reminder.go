@@ -8,9 +8,13 @@ import (
 )
 
 type RescheduleReminderRequest struct {
-	CronExpression string `json:"cron_expression"`
-	EndsAt         string `json:"ends_at"`
-	Repeats        uint   `json:"repeats"`
+	StartDate  string `json:"start_date"`
+	StartTime  string `json:"start_time"`
+	Timezone   string `json:"timezone"`
+	Interval   string `json:"interval"`
+	WeekDays   string `json:"week_days"`
+	EndsAfterN uint   `json:"ends_after_n"`
+	EndsAt     string `json:"ends_at"`
 }
 
 type RescheduleReminderResponse struct {
@@ -30,7 +34,7 @@ func (a CommandApplication) RescheduleReminder(ctx context.Context, userID, note
 		return RescheduleReminderResponse{}, err
 	}
 
-	err = user.RescheduleAReminder(&reminder, r.CronExpression, r.EndsAt, r.Repeats)
+	err = user.RescheduleAReminder(&reminder, r.StartDate, r.StartTime, r.Timezone, r.Interval, r.WeekDays, r.EndsAt, r.EndsAfterN)
 	if err != nil {
 		return RescheduleReminderResponse{}, err
 	}

@@ -2,7 +2,6 @@ package notes
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -218,12 +217,17 @@ func TestApplication(t *testing.T) {
 			Title:       title,
 			Description: description,
 		})
-		cronExpression := "33 20 19 * *"
+		refDate := time.Now()
+		startDate := time.Date(refDate.Year(), refDate.Month(), refDate.Day(), 0, 0, 0, 0, time.UTC)
+		timezone := "UTC"
+		startTime := "20:33"
+		interval := notes.Daily
 
 		r, err := app.ScheduleReminder(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String(), ScheduleReminderRequest{
-			CronExpression: cronExpression,
-			EndsAt:         "",
-			Repeats:        0,
+			StartDate: startDate.Format(time.DateOnly),
+			StartTime: startTime,
+			Timezone:  timezone,
+			Interval:  string(interval),
 		})
 
 		g.Expect(err).Should(
@@ -237,13 +241,14 @@ func TestApplication(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminderFromDb).Should(
-			notes.BeAReminder(t, createNoteResponse.NoteID, fakeUser.ID, cronExpression, time.Time{}, time.Now(), time.Now()))
+			notes.BeAReminder(t, createNoteResponse.NoteID, fakeUser.ID, startDate, startTime, timezone, interval, "", 0, time.Time{}, time.Now(), time.Now()))
 
 		t.Run("Cannot schedule more than one reminder to the same note", func(t *testing.T) {
 			_, err = app.ScheduleReminder(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String(), ScheduleReminderRequest{
-				CronExpression: cronExpression,
-				EndsAt:         "",
-				Repeats:        0,
+				StartDate: startDate.Format(time.DateOnly),
+				StartTime: startTime,
+				Timezone:  timezone,
+				Interval:  string(interval),
 			})
 
 			g.Expect(err).Should(
@@ -272,22 +277,26 @@ func TestApplication(t *testing.T) {
 			Description: description,
 		})
 		createReminderResponse, err := app.ScheduleReminder(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String(), ScheduleReminderRequest{
-			CronExpression: "33 20 19 * *",
-			EndsAt:         "",
-			Repeats:        0,
+			StartDate: "2023-05-24",
+			StartTime: "20:19",
+			Timezone:  "UTC",
+			Interval:  "Monthly",
 		})
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
-		repeats := uint(5)
-		refDate := time.Now().AddDate(0, 0, -1)
-		cronExpression := fmt.Sprintf("28 21 %d * *", refDate.Day())
-		endsAtByRepetition := time.Date(refDate.Year(), refDate.Month(), refDate.Day(), 21, 28, 0, 0, refDate.Location()).
-			AddDate(0, int(repeats), 0)
+		refDate := time.Now()
+		startDate := time.Date(refDate.Year(), refDate.Month(), refDate.Day(), 0, 0, 0, 0, time.UTC)
+		timezone := "UTC"
+		startTime := "20:33"
+		interval := notes.Daily
+		endsAfterN := uint(5)
 
 		r, err := app.RescheduleReminder(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String(), createReminderResponse.ReminderID.String(), RescheduleReminderRequest{
-			CronExpression: cronExpression,
-			EndsAt:         "",
-			Repeats:        repeats,
+			StartDate:  startDate.Format(time.DateOnly),
+			StartTime:  startTime,
+			Timezone:   timezone,
+			Interval:   string(interval),
+			EndsAfterN: endsAfterN,
 		})
 
 		g.Expect(err).Should(
@@ -301,7 +310,7 @@ func TestApplication(t *testing.T) {
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
 		g.Expect(reminderFromDb).Should(
-			notes.BeAReminder(t, createNoteResponse.NoteID, fakeUser.ID, cronExpression, endsAtByRepetition, time.Now(), time.Now()))
+			notes.BeAReminder(t, createNoteResponse.NoteID, fakeUser.ID, startDate, startTime, timezone, interval, "", endsAfterN, time.Time{}, time.Now(), time.Now()))
 	})
 
 	t.Run("Delete a reminder successfully", func(t *testing.T) {
@@ -318,9 +327,10 @@ func TestApplication(t *testing.T) {
 			Description: description,
 		})
 		createReminderResponse, err := app.ScheduleReminder(ctx, fakeUser.ID.String(), createNoteResponse.NoteID.String(), ScheduleReminderRequest{
-			CronExpression: "33 20 19 * *",
-			EndsAt:         "",
-			Repeats:        0,
+			StartDate: "2023-05-24",
+			StartTime: "20:19",
+			Timezone:  "UTC",
+			Interval:  "Monthly",
 		})
 		g.Expect(err).Should(
 			Not(HaveOccurred()))
