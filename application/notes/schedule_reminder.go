@@ -53,6 +53,11 @@ func (a CommandApplication) ScheduleReminder(ctx context.Context, userID, noteID
 		return ScheduleReminderResponse{}, err
 	}
 
+	err = a.cron.CreateCron(ctx, reminder)
+	if err != nil {
+		return ScheduleReminderResponse{}, err
+	}
+
 	return ScheduleReminderResponse{
 		ReminderID: reminder.ID,
 		CreatedAt:  reminder.CreatedAt,

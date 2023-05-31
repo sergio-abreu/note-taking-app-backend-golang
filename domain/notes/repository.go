@@ -30,6 +30,7 @@ type Repository interface {
 	MarkAsInProgress(ctx context.Context, note Note) error
 
 	FindReminder(ctx context.Context, userID, noteID, reminderID string) (Reminder, error)
+	FindReminderByNoteID(ctx context.Context, userID, noteID string) (Reminder, error)
 	ScheduleReminder(ctx context.Context, reminder Reminder) error
 	RescheduleReminder(ctx context.Context, reminder Reminder) error
 	DeleteReminder(ctx context.Context, reminder Reminder) error

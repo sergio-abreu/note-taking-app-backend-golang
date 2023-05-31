@@ -10,6 +10,7 @@ import (
 	"github.com/onsi/gomega/gstruct"
 
 	"github.com/sergio-abreu/note-taking-app-backend-golang/domain/notes"
+	"github.com/sergio-abreu/note-taking-app-backend-golang/infrastructure/cron"
 	"github.com/sergio-abreu/note-taking-app-backend-golang/infrastructure/repositories"
 )
 
@@ -356,7 +357,7 @@ func initializeApplication(_ *testing.T) (
 	}
 	db = db.Debug()
 	notesRepo := repositories.NewNotesRepository(db)
-	app := NewCommandApplication(notesRepo)
+	app := NewCommandApplication(notesRepo, cron.NewLocalCron("/tmp/note-taking-tests"))
 
 	return notesRepo, app, nil
 }

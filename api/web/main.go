@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/sergio-abreu/note-taking-app-backend-golang/application/notes"
+	"github.com/sergio-abreu/note-taking-app-backend-golang/infrastructure/cron"
 	"github.com/sergio-abreu/note-taking-app-backend-golang/infrastructure/repositories"
 )
 
@@ -29,7 +30,8 @@ func run() error {
 
 	db = db.Debug()
 	notesRepo := repositories.NewNotesRepository(db)
-	command := notes.NewCommandApplication(notesRepo)
+	localCron := cron.NewLocalCron("/tmp")
+	command := notes.NewCommandApplication(notesRepo, localCron)
 	query := notes.NewQueryApplication(db)
 	server := WebServer{command: command, query: query}
 

@@ -2,8 +2,6 @@ package repositories
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -117,11 +115,6 @@ func (n NotesRepository) DeleteNote(ctx context.Context, note notes.Note) error 
 			return err
 		}
 
-		err = n.unscheduleCron(ctx, reminder.ID)
-		if pgErr, ok := err.(*pgconn.PgError); err != nil && (!ok || !strings.Contains(pgErr.Message, "could not find valid entry for job")) {
-			return err
-		}
-
 		err = n.db.WithContext(ctx).
 			Table("notes").
 			Delete(&note).Error
@@ -201,6 +194,30 @@ func (n NotesRepository) FindReminder(ctx context.Context, rawUserID, rawNoteID,
 	return reminder, nil
 }
 
+func (n NotesRepository) FindReminderByNoteID(ctx context.Context, rawUserID, rawNoteID string) (notes.Reminder, error) {
+	userID, err := parseUserID(rawUserID)
+	if err != nil {
+		return notes.Reminder{}, err
+	}
+	noteID, err := parseNoteID(rawNoteID)
+	if err != nil {
+		return notes.Reminder{}, err
+	}
+
+	var reminder notes.Reminder
+	err = n.db.WithContext(ctx).
+		Table("reminders").
+		First(&reminder, "user_id = ? AND note_id = ?", userID, noteID).Error
+	if err == gorm.ErrRecordNotFound {
+		return notes.Reminder{}, notes.ErrReminderNotFound
+	}
+	if err != nil {
+		return notes.Reminder{}, err
+	}
+
+	return reminder, nil
+}
+
 func (n NotesRepository) ScheduleReminder(ctx context.Context, reminder notes.Reminder) error {
 	return n.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		fields := []string{"id", "note_id", "user_id", "start_date", "start_time", "timezone", "interval", "ends_after_n", "created_at", "updated_at"}
@@ -221,7 +238,7 @@ func (n NotesRepository) ScheduleReminder(ctx context.Context, reminder notes.Re
 			return err
 		}
 
-		return n.scheduleCron(ctx, reminder)
+		return nil
 	})
 }
 
@@ -234,52 +251,21 @@ func (n NotesRepository) RescheduleReminder(ctx context.Context, reminder notes.
 		if reminder.Interval == notes.Weekly && len(reminder.WeekDays) != 0 {
 			fields = append(fields, "week_days")
 		}
-		err := tx.WithContext(ctx).
+		return tx.WithContext(ctx).
 			Table("reminders").
 			Select(fields).
 			Where("id = ?", reminder.ID).
 			Updates(&reminder).Error
-		if err != nil {
-			return err
-		}
-
-		return n.scheduleCron(ctx, reminder)
 	})
 }
 
 func (n NotesRepository) DeleteReminder(ctx context.Context, reminder notes.Reminder) error {
 	return n.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		err := tx.WithContext(ctx).
+		return tx.WithContext(ctx).
 			Table("reminders").
 			Where("id = ?", reminder.ID).
 			Delete(&reminder).Error
-		if err != nil {
-			return err
-		}
-
-		return n.unscheduleCron(ctx, reminder.ID)
 	})
-}
-
-func (n NotesRepository) scheduleCron(ctx context.Context, reminder notes.Reminder) error {
-	cronExpression := reminder.ParseCron()
-	endsAt := reminder.ParseEndsAt(cronExpression)
-	if len(endsAt) == 0 {
-		endsAt = "NULL"
-	} else {
-		endsAt = "'" + endsAt + "'"
-	}
-	sql := fmt.Sprintf("SELECT cron.schedule(?, ?, $$ SELECT publish_reminder('%s', %s); $$);", reminder.ID, endsAt)
-	return n.db.WithContext(ctx).Exec(sql, reminder.ID, cronExpression).Error
-}
-
-func (n NotesRepository) unscheduleCron(ctx context.Context, reminderID uuid.UUID) error {
-	sql := "SELECT cron.unschedule(?);"
-	err := n.db.WithContext(ctx).Exec(sql, reminderID).Error
-	if pgErr, ok := err.(*pgconn.PgError); ok && strings.Contains(pgErr.Message, "could not find valid entry for job") {
-		return nil
-	}
-	return err
 }
 
 func parseUserID(userID string) (uuid.UUID, error) {

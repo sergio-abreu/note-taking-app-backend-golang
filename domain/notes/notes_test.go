@@ -650,6 +650,7 @@ func TestNote_RescheduleAReminder(t *testing.T) {
 			Not(HaveOccurred()))
 		refDate := time.Now().UTC().AddDate(0, 0, -1)
 		startDate := time.Date(refDate.Year(), refDate.Month(), refDate.Day(), 0, 0, 0, 0, time.UTC)
+		fmt.Println(startDate.AddDate(0, 0, 3))
 		timezone := "UTC"
 		startTime := "01:00"
 		interval := Daily

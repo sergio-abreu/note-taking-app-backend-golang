@@ -25,5 +25,10 @@ func (a CommandApplication) DeleteReminder(ctx context.Context, userID, noteID, 
 		return err
 	}
 
+	err = a.cron.DeleteCron(ctx, reminder)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
