@@ -13,6 +13,8 @@ services:
       POSTGRES_DB: note-taking-app
       POSTGRES_USER: note-taking
       POSTGRES_PASSWORD: note-taking
+    external_links:
+      - "note-taking:172.17.0.1"
 
   adminer:
     image: adminer
@@ -32,8 +34,6 @@ services:
       RABBITMQ_DEFAULT_VHOST: note-taking
 
   migration:
-    depends_on:
-      - postgresql
     image: migrate/migrate:v4.15.2
     restart: on-failure
     environment:
@@ -44,4 +44,4 @@ services:
       PG_DB: note-taking-app
     volumes:
       - "./infrastructure/migrations:/migrations"
-    command: "-path=/migrations/ -database \"postgres://${PG_USER}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${PG_DB}?sslmode=disable\" up"
+    command: "-path=/migrations/ -database postgres://note-taking:note-taking@postgresql:5432/note-taking-app?sslmode=disable up"

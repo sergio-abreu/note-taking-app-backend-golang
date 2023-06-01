@@ -16,6 +16,27 @@ RUN rm -rf /pgsql-http && \
 RUN echo "#!/usr/bin/env bash\n\n\
 conf=/var/lib/postgresql/data/postgresql.conf\n\
 echo \"shared_preload_libraries = pg_cron\" >> \$conf\n\
-echo \"cron.database_name = \"\$POSTGRES_DB\"\" >> \$conf" > /docker-entrypoint-initdb.d/0001_init_pg_cron.sh
+echo \"cron.database_name = \"\$POSTGRES_DB\"\" >> \$conf\n\
+pg_ctl restart" > /docker-entrypoint-initdb.d/0001_init_pg_cron.sh
+
+RUN echo "CREATE EXTENSION IF NOT EXISTS pg_cron; \n\
+CREATE EXTENSION IF NOT EXISTS http;" > /docker-entrypoint-initdb.d/0002_enable_extensions.sql
+
+RUN echo "CREATE OR REPLACE FUNCTION note_taking_reminder_webhook (_user_id uuid, _note_id uuid, _reminder_id uuid, _date timestamptz) RETURNS text AS \$\$\n\
+DECLARE\n\
+    _response text;\n\
+    _status int;\n\
+BEGIN\n\
+    SELECT status, content into _status, _response FROM http_post(\n\
+            'http://note-taking:8080/v1/webhook/reminders',\n\
+            '{\"reminder_id\":\"'|| _reminder_id ||'\",\"note_id\":\"'|| _note_id ||'\",\"user_id\":\"'|| _user_id ||'\",\"expires\":\"'|| _date ||'\"}\"',\n\
+            'application/json'\n\
+        );\n\
+    IF _status <> 200 THEN\n\
+        RAISE EXCEPTION 'failed to send request: http.status = % http.response = %', _status, _response;\n\
+    END IF;\n\
+    RETURN 'response: ' || _response;\n\
+END; \$\$ LANGUAGE plpgsql;" > /docker-entrypoint-initdb.d/0003_create_webhook_function.sql
 
 RUN chown -R postgres:postgres /docker-entrypoint-initdb.d
+

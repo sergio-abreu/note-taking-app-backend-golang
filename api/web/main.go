@@ -30,7 +30,7 @@ func run() error {
 
 	db = db.Debug()
 	notesRepo := repositories.NewNotesRepository(db)
-	localCron := cron.NewLocalCron("/tmp")
+	localCron := cron.NewPgCron("/tmp")
 	command := notes.NewCommandApplication(notesRepo, localCron)
 	query := notes.NewQueryApplication(db)
 	server := WebServer{command: command, query: query}

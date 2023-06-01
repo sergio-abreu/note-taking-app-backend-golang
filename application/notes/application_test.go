@@ -357,7 +357,7 @@ func initializeApplication(_ *testing.T) (
 	}
 	db = db.Debug()
 	notesRepo := repositories.NewNotesRepository(db)
-	app := NewCommandApplication(notesRepo, cron.NewLocalCron("/tmp/note-taking-tests"))
+	app := NewCommandApplication(notesRepo, cron.NewPgCron(db))
 
 	return notesRepo, app, nil
 }
