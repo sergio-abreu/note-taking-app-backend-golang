@@ -294,7 +294,7 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 		g.Expect(cron).Should(
 			Equal("0 1 * * *"))
 		g.Expect(reminder.ParseEndsAt(cron)).Should(
-			Equal(""))
+			BeZero())
 	})
 
 	t.Run("Schedule a reminder to repeat weekly (Mon, Wed, Fri) forever successfully", func(t *testing.T) {
@@ -320,7 +320,7 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 		g.Expect(cron).Should(
 			Equal("23 13 * * 1,3,5"))
 		g.Expect(reminder.ParseEndsAt(cron)).Should(
-			Equal(""))
+			BeZero())
 	})
 
 	t.Run("Schedule a reminder to repeat monthly forever successfully", func(t *testing.T) {
@@ -345,7 +345,7 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 		g.Expect(cron).Should(
 			Equal(fmt.Sprintf("19 15 %d * *", refDate.Day())))
 		g.Expect(reminder.ParseEndsAt(cron)).Should(
-			Equal(""))
+			BeZero())
 	})
 
 	t.Run("Schedule a reminder to repeat yearly forever successfully", func(t *testing.T) {
@@ -370,7 +370,7 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 		g.Expect(cron).Should(
 			Equal(fmt.Sprintf("11 23 %d %d *", refDate.Day(), refDate.Month())))
 		g.Expect(reminder.ParseEndsAt(cron)).Should(
-			Equal(""))
+			BeZero())
 	})
 
 	t.Run("Schedule a reminder to repeat 3 times successfully", func(t *testing.T) {
@@ -397,7 +397,7 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 		g.Expect(cron).Should(
 			Equal("0 1 * * *"))
 		g.Expect(reminder.ParseEndsAt(cron)).Should(
-			Equal(endsAtByRepetition.Format(time.RFC3339)))
+			BeTemporally("~", endsAtByRepetition, time.Second))
 	})
 
 	t.Run("Schedule a reminder to repeat until certain date successfully", func(t *testing.T) {
@@ -423,7 +423,7 @@ func TestNote_ScheduleAReminder(t *testing.T) {
 		g.Expect(cron).Should(
 			Equal("12 0 * * *"))
 		g.Expect(reminder.ParseEndsAt(cron)).Should(
-			Equal(endsAt.Format(time.DateOnly)))
+			BeTemporally("~", endsAt, time.Second))
 	})
 
 	t.Run("Don't create a reminder when start date format is invalid", func(t *testing.T) {
@@ -552,7 +552,7 @@ func TestNote_RescheduleAReminder(t *testing.T) {
 		g.Expect(cron).Should(
 			Equal("0 1 * * *"))
 		g.Expect(reminder.ParseEndsAt(cron)).Should(
-			Equal(""))
+			BeZero())
 	})
 
 	t.Run("Reschedule a reminder to repeat weekly (Tue, Thu, Sat, Sun) forever successfully", func(t *testing.T) {
@@ -581,7 +581,7 @@ func TestNote_RescheduleAReminder(t *testing.T) {
 		g.Expect(cron).Should(
 			Equal("0 1 * * 2,4,6,7"))
 		g.Expect(reminder.ParseEndsAt(cron)).Should(
-			Equal(""))
+			BeZero())
 	})
 
 	t.Run("Reschedule a reminder to repeat monthly forever successfully", func(t *testing.T) {
@@ -609,7 +609,7 @@ func TestNote_RescheduleAReminder(t *testing.T) {
 		g.Expect(cron).Should(
 			Equal(fmt.Sprintf("0 1 %d * *", refDate.Day())))
 		g.Expect(reminder.ParseEndsAt(cron)).Should(
-			Equal(""))
+			BeZero())
 	})
 
 	t.Run("Reschedule a reminder to repeat yearly forever successfully", func(t *testing.T) {
@@ -637,7 +637,7 @@ func TestNote_RescheduleAReminder(t *testing.T) {
 		g.Expect(cron).Should(
 			Equal(fmt.Sprintf("0 1 %d %d *", refDate.Day(), refDate.Month())))
 		g.Expect(reminder.ParseEndsAt(cron)).Should(
-			Equal(""))
+			BeZero())
 	})
 
 	t.Run("Reschedule a reminder to repeat 3 times successfully", func(t *testing.T) {
@@ -668,7 +668,7 @@ func TestNote_RescheduleAReminder(t *testing.T) {
 		g.Expect(cron).Should(
 			Equal("0 1 * * *"))
 		g.Expect(reminder.ParseEndsAt(cron)).Should(
-			Equal(endsAtByRepetition.Format(time.RFC3339)))
+			BeTemporally("~", endsAtByRepetition, time.Second))
 	})
 
 	t.Run("Reschedule a reminder to repeat until certain date successfully", func(t *testing.T) {
@@ -697,7 +697,7 @@ func TestNote_RescheduleAReminder(t *testing.T) {
 		g.Expect(cron).Should(
 			Equal("0 1 * * *"))
 		g.Expect(reminder.ParseEndsAt(cron)).Should(
-			Equal(endsAt.Format(time.DateOnly)))
+			BeTemporally("~", endsAt, time.Second))
 	})
 
 	t.Run("Don't reschedule a reminder when start date format is invalid", func(t *testing.T) {

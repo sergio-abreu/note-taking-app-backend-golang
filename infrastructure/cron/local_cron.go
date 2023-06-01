@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"time"
 
 	"github.com/gofrs/uuid"
 
@@ -75,10 +76,20 @@ func (l LocalCron) createCronFile(reminder notes.Reminder) error {
 	cron := reminder.ParseCron()
 	id := reminder.ID
 	endsAt := reminder.ParseEndsAt(cron)
-	// if [[ -z '123' ]] || [[ "$(date +%s)" -le "$(date -d 2013-07-18T01:00:00Z +%s)" ]]; then echo greater; else echo smaller; fi
+	cmd := fmt.Sprintf(`curl -x POST "$NOTE_TAKING_BASE_URL"/v1/webhook/reminder/%s`, id)
+	if !endsAt.IsZero() {
+		cmd = fmt.Sprintf(
+			`FILEPATH=%s; FILENAME="$FILEPATH"/%s.cron; DIR_PATTERN="$FILEPATH"/*.cron; if [[ "$(date +%%s)" -le "$(date -d %s +%%s)" ]]; then %s; else if [[ -e "$FILENAME" ]]; then rm "$FILENAME"; fi && if [[ -e "$DIR_PATTERN" ]]; then cat "$DIR_PATTERN" | crontab -; else echo | crontab -; fi; fi`,
+			l.baseDir,
+			reminder.ID,
+			endsAt.Format(time.RFC3339),
+			cmd,
+		)
+	}
+	println(cmd)
 	_, err = f.Write([]byte(
-		fmt.Sprintf(`%s curl -x POST "$NOTE_TAKING_BASE_URL"/v1/webhook/reminder/%s?date=%s
-`, cron, id, endsAt)))
+		fmt.Sprintf(`%s %s
+`, cron, cmd)))
 	if err != nil {
 		return err
 	}

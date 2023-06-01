@@ -166,18 +166,18 @@ func (r *Reminder) ParseCron() string {
 	return fmt.Sprintf("%d %d %s %s %s", startDate.Minute(), startDate.Hour(), day, month, week)
 }
 
-func (r *Reminder) ParseEndsAt(cronExpression string) string {
+func (r *Reminder) ParseEndsAt(cronExpression string) time.Time {
 	if r.EndsAfterN > 0 {
 		endsAt := time.Now().UTC()
 		for i := uint(0); i < r.EndsAfterN; i++ {
 			endsAt, _ = gronx.NextTickAfter(cronExpression, endsAt, false)
 		}
-		return endsAt.Format(time.RFC3339)
+		return endsAt
 	}
 	if !r.EndsAt.IsZero() {
-		return r.EndsAt.Format(time.DateOnly)
+		return r.EndsAt.UTC()
 	}
-	return ""
+	return time.Time{}
 }
 
 func parseStartDate(rawStartDate string) (time.Time, error) {
